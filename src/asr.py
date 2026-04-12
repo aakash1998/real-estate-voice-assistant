@@ -24,7 +24,8 @@ async def transcribe_mic(on_transcript):
             transcript = result.channel.alternatives[0].transcript
             if result.is_final and transcript.strip():
                 print(f"[ASR] Final transcript: {transcript}")
-                await on_transcript(transcript)
+                # Run as background task so audio keeps streaming to Deepgram
+                asyncio.create_task(on_transcript(transcript))
         except Exception as e:
             print(f"[ASR] Message parse error: {e}")
 
