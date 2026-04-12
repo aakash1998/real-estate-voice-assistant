@@ -1,42 +1,57 @@
 import os
 import asyncio
-import io
+import time
 from elevenlabs import ElevenLabs
 from elevenlabs.play import play
 from dotenv import load_dotenv
+import io
 
 load_dotenv()
 
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 
-async def speak(text: str):
-    """For local pipeline - plays audio through speaker"""
-    print(f"[TTS] Speaking: {text}")
+async def speak(text: str) -> tuple[float, asyncio.Task]:
+    print(f"[TTS] Converting to audio...")
+
+    start = time.time()
+
     audio = client.text_to_speech.convert(
         text=text,
         voice_id="JBFqnCBsd6RMkjVDRZzb",
         model_id="eleven_turbo_v2",
         output_format="mp3_44100_128"
     )
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, play, audio)
-    print("[TTS] Done speaking")
 
-async def speak_to_buffer(text: str) -> bytes:
-    """
-    For phone pipeline - returns audio as bytes
-    instead of playing through speaker.
-    Twilio needs mulaw 8000Hz format.
-    """
-    print(f"[TTS] Converting to audio: {text}")
+    audio_bytes = b"".join(chunk for chunk in audio)
+    tts_latency = (time.time() - start) * 1000
+    print(f"[TTS] {tts_latency:.0f}ms")
+
+    async def play_audio():
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, play, io.BytesIO(audio_bytes))
+
+    # Return the task so pipeline can wait for it
+    play_task = asyncio.create_task(play_audio())
+
+    return tts_latency, play_task
+
+async def speak_to_buffer(text: str) -> tuple[bytes, float]:
+    """For phone pipeline - returns audio bytes and latency"""
+    print(f"[TTS] Converting to audio...")
+
+    start = time.time()
+
     audio = client.text_to_speech.convert(
         text=text,
         voice_id="JBFqnCBsd6RMkjVDRZzb",
         model_id="eleven_turbo_v2",
-        output_format="ulaw_8000"  # Twilio's required format
+        output_format="ulaw_8000"
     )
-    # Collect all audio chunks into bytes
+
     audio_bytes = b"".join(chunk for chunk in audio)
-    print("[TTS] Audio ready")
-    return audio_bytes
+    tts_latency = (time.time() - start) * 1000
+
+    print(f"[TTS] {tts_latency:.0f}ms")
+
+    return audio_bytes, tts_latency

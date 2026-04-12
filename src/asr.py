@@ -1,7 +1,7 @@
 import os
+import time
 import asyncio
 import sounddevice as sd
-import numpy as np
 from deepgram import DeepgramClient, LiveTranscriptionEvents, LiveOptions
 from dotenv import load_dotenv
 
@@ -9,25 +9,47 @@ load_dotenv()
 
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 
+_is_speaking = False
+
+def set_speaking(state: bool):
+    global _is_speaking
+    _is_speaking = state
+
+# Update send_audio function
+async def send_audio():
+    while True:
+        data = await audio_queue.get()
+        if not _is_speaking:
+            await connection.send(data)
+
 async def transcribe_mic(on_transcript):
     """
-    Opens a live WebSocket connection to Deepgram.
-    Uses a queue to safely pass audio from the mic thread to async code.
-    Calls on_transcript() when a final sentence is detected.
+    Streams mic audio to Deepgram.
+    Tracks ASR latency and passes it to callback.
     """
     deepgram = DeepgramClient(DEEPGRAM_API_KEY)
     connection = deepgram.listen.asynclive.v("1")
     audio_queue = asyncio.Queue()
+    speech_start_time = None
 
     async def on_message(self, result, **kwargs):
+        nonlocal speech_start_time
         try:
             transcript = result.channel.alternatives[0].transcript
+
+            if transcript.strip() and speech_start_time is None:
+                # First word detected - start ASR stopwatch
+                speech_start_time = time.time()
+
             if result.is_final and transcript.strip():
-                print(f"[ASR] Final transcript: {transcript}")
-                # Run as background task so audio keeps streaming to Deepgram
-                asyncio.create_task(on_transcript(transcript))
+                # Calculate ASR latency
+                asr_latency = (time.time() - speech_start_time) * 1000
+                speech_start_time = None  # Reset for next question
+
+                asyncio.create_task(on_transcript(transcript, asr_latency))
+
         except Exception as e:
-            print(f"[ASR] Message parse error: {e}")
+            print(f"[ASR] Error: {e}")
 
     async def on_error(self, error, **kwargs):
         print(f"[ASR] Error: {error}")
@@ -42,7 +64,7 @@ async def transcribe_mic(on_transcript):
         channels=1,
         sample_rate=16000,
         interim_results=True,
-        endpointing=500
+        endpointing=1000
     )
 
     await connection.start(options)
@@ -51,13 +73,19 @@ async def transcribe_mic(on_transcript):
     loop = asyncio.get_event_loop()
 
     def audio_callback(indata, frames, time, status):
-        # Safely put audio data into the queue from the mic thread
         loop.call_soon_threadsafe(audio_queue.put_nowait, bytes(indata))
 
     async def send_audio():
+        blocked_count = 0
         while True:
             data = await audio_queue.get()
-            await connection.send(data)
+            if not _is_speaking:
+                if blocked_count > 0:
+                    print(f"[ASR] Resuming - blocked {blocked_count} chunks while speaking")
+                    blocked_count = 0
+                await connection.send(data)
+            else:
+                blocked_count += 1
 
     with sd.InputStream(
         samplerate=16000,
