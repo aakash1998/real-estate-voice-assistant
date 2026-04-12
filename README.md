@@ -808,8 +808,8 @@ MIT License — see LICENSE file for details.
 
 Built by Aakash Patel — Data Engineer transitioning into AI Engineering.
 
-- LinkedIn: [\[ADD LINKEDIN PROFILE LINK HERE\]](https://www.linkedin.com/in/aakashpatel05/)
-- Portfolio: aakashbuilds.dev
+- LinkedIn: (https://www.linkedin.com/in/aakashpatel05/)
+- Portfolio: https://aakashbuilds.dev/
 - Demo Video: [ADD LINKEDIN POST LINK HERE]
 
 ---
