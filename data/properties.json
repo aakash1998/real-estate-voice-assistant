@@ -1,0 +1,112 @@
+{
+  "properties": [
+    {
+      "name": "Belmont House",
+      "address": "1228 13 Ave SW, Calgary, AB",
+      "neighborhood": "Sunalta / 17th Ave SW area",
+      "city": "Calgary",
+      "unit_types": ["1 bedroom", "2 bedroom"],
+      "rent_range": "$1,430 - $1,855 per month",
+      "amenities": [
+        "Fridge",
+        "Stove",
+        "Microwave",
+        "Balconies",
+        "In-suite storage",
+        "Laundry facilities",
+        "Surface parking ($50/month)",
+        "Elevators",
+        "Heat included",
+        "Water included"
+      ],
+      "pet_friendly": true,
+      "parking": true
+    },
+    {
+      "name": "Peyto Apartments",
+      "address": "1028 13 Ave SW, Calgary, AB",
+      "neighborhood": "Sunalta / 17th Ave SW area",
+      "city": "Calgary",
+      "unit_types": ["1 bedroom"],
+      "rent_range": "$1,430 per month",
+      "amenities": [
+        "Fridge",
+        "Stove",
+        "In-suite storage",
+        "Laundry facilities",
+        "Storage room",
+        "Heat included",
+        "Water included"
+      ],
+      "pet_friendly": true,
+      "parking": false
+    },
+    {
+      "name": "The Winston",
+      "address": "1008 14 Ave SW, Calgary, AB",
+      "neighborhood": "Inner-city Calgary / 14 Ave SW area",
+      "city": "Calgary",
+      "unit_types": ["Bachelor", "1 bedroom", "2 bedroom"],
+      "rent_range": "$1,424 - $1,449 per month (2 bedroom on waitlist)",
+      "amenities": [
+        "Fridge",
+        "Stove",
+        "Dishwasher available",
+        "Balconies",
+        "In-suite storage",
+        "Stainless steel appliances available",
+        "Kitchen islands available",
+        "Laundry facilities",
+        "Security lights",
+        "Street parking ($100/month)",
+        "Heat included",
+        "Water included"
+      ],
+      "pet_friendly": true,
+      "parking": true
+    },
+    {
+      "name": "Cameron Manor",
+      "address": "1015 Cameron Ave SW, Calgary, AB",
+      "neighborhood": "17th Ave SW / Marda Loop area",
+      "city": "Calgary",
+      "unit_types": ["1 bedroom", "2 bedroom"],
+      "rent_range": "$1,580 - $1,705 per month",
+      "amenities": [
+        "Fridge",
+        "Stove",
+        "Dishwasher available",
+        "Balconies",
+        "In-suite storage",
+        "Laundry facilities",
+        "Surface parking",
+        "Underground parking",
+        "Heat included",
+        "Water included"
+      ],
+      "pet_friendly": true,
+      "parking": true
+    },
+    {
+      "name": "Forest Hills",
+      "address": "2010 Hope St SW, Calgary, AB",
+      "neighborhood": "17th Ave SW / Marda Loop area",
+      "city": "Calgary",
+      "unit_types": ["Bachelor", "1 bedroom", "2 bedroom"],
+      "rent_range": "from $1,330 per month (per-unit breakdown not specified)",
+      "amenities": [
+        "Fridge",
+        "Stove",
+        "Dishwasher available",
+        "Balconies",
+        "In-suite storage",
+        "Laundry facilities",
+        "Surface parking",
+        "Heat included",
+        "Water included"
+      ],
+      "pet_friendly": true,
+      "parking": true
+    }
+  ]
+}
