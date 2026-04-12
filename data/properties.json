@@ -3,110 +3,175 @@
     {
       "name": "Belmont House",
       "address": "1228 13 Ave SW, Calgary, AB",
-      "neighborhood": "Sunalta / 17th Ave SW area",
+      "neighborhood": "Sunalta",
       "city": "Calgary",
       "unit_types": ["1 bedroom", "2 bedroom"],
-      "rent_range": "$1,430 - $1,855 per month",
-      "amenities": [
-        "Fridge",
-        "Stove",
-        "Microwave",
-        "Balconies",
-        "In-suite storage",
-        "Laundry facilities",
-        "Surface parking ($50/month)",
-        "Elevators",
-        "Heat included",
-        "Water included"
-      ],
+      "rent": {
+        "1 bedroom": "$1,430/month",
+        "2 bedroom": "$1,855/month"
+      },
+      "amenities": ["Balconies", "In-suite storage", "Laundry facilities", "Elevators", "Microwave"],
+      "utilities_included": ["Heat", "Water"],
       "pet_friendly": true,
-      "parking": true
+      "parking": "Surface parking $50/month",
+      "highlights": "Quiet residential street, walkable to 17th Ave restaurants and shops",
+      "availability": "Available now"
     },
     {
       "name": "Peyto Apartments",
       "address": "1028 13 Ave SW, Calgary, AB",
-      "neighborhood": "Sunalta / 17th Ave SW area",
+      "neighborhood": "Sunalta",
       "city": "Calgary",
       "unit_types": ["1 bedroom"],
-      "rent_range": "$1,430 per month",
-      "amenities": [
-        "Fridge",
-        "Stove",
-        "In-suite storage",
-        "Laundry facilities",
-        "Storage room",
-        "Heat included",
-        "Water included"
-      ],
+      "rent": {
+        "1 bedroom": "$1,430/month"
+      },
+      "amenities": ["In-suite storage", "Laundry facilities", "Storage room"],
+      "utilities_included": ["Heat", "Water"],
       "pet_friendly": true,
-      "parking": false
+      "parking": "No parking available",
+      "highlights": "Most affordable option in the area, great for single professionals",
+      "availability": "Available now"
     },
     {
       "name": "The Winston",
       "address": "1008 14 Ave SW, Calgary, AB",
-      "neighborhood": "Inner-city Calgary / 14 Ave SW area",
+      "neighborhood": "Beltline",
       "city": "Calgary",
       "unit_types": ["Bachelor", "1 bedroom", "2 bedroom"],
-      "rent_range": "$1,424 - $1,449 per month (2 bedroom on waitlist)",
-      "amenities": [
-        "Fridge",
-        "Stove",
-        "Dishwasher available",
-        "Balconies",
-        "In-suite storage",
-        "Stainless steel appliances available",
-        "Kitchen islands available",
-        "Laundry facilities",
-        "Security lights",
-        "Street parking ($100/month)",
-        "Heat included",
-        "Water included"
-      ],
+      "rent": {
+        "Bachelor": "$1,100/month",
+        "1 bedroom": "$1,424/month",
+        "2 bedroom": "Waitlist only"
+      },
+      "amenities": ["Balconies", "Dishwasher", "Stainless steel appliances", "Kitchen islands", "Laundry facilities", "Security lights"],
+      "utilities_included": ["Heat", "Water"],
       "pet_friendly": true,
-      "parking": true
+      "parking": "Street parking $100/month",
+      "highlights": "Modern finishes, kitchen islands, great for young professionals",
+      "availability": "Bachelor available now, 1 bedroom available next month"
     },
     {
       "name": "Cameron Manor",
       "address": "1015 Cameron Ave SW, Calgary, AB",
-      "neighborhood": "17th Ave SW / Marda Loop area",
+      "neighborhood": "Marda Loop",
       "city": "Calgary",
       "unit_types": ["1 bedroom", "2 bedroom"],
-      "rent_range": "$1,580 - $1,705 per month",
-      "amenities": [
-        "Fridge",
-        "Stove",
-        "Dishwasher available",
-        "Balconies",
-        "In-suite storage",
-        "Laundry facilities",
-        "Surface parking",
-        "Underground parking",
-        "Heat included",
-        "Water included"
-      ],
+      "rent": {
+        "1 bedroom": "$1,580/month",
+        "2 bedroom": "$1,705/month"
+      },
+      "amenities": ["Balconies", "Dishwasher", "In-suite storage", "Laundry facilities", "Underground parking"],
+      "utilities_included": ["Heat", "Water"],
       "pet_friendly": true,
-      "parking": true
+      "parking": "Underground parking included",
+      "highlights": "Underground parking included, steps from Marda Loop shops and cafes",
+      "availability": "Available now"
     },
     {
       "name": "Forest Hills",
       "address": "2010 Hope St SW, Calgary, AB",
-      "neighborhood": "17th Ave SW / Marda Loop area",
+      "neighborhood": "Marda Loop",
       "city": "Calgary",
       "unit_types": ["Bachelor", "1 bedroom", "2 bedroom"],
-      "rent_range": "from $1,330 per month (per-unit breakdown not specified)",
-      "amenities": [
-        "Fridge",
-        "Stove",
-        "Dishwasher available",
-        "Balconies",
-        "In-suite storage",
-        "Laundry facilities",
-        "Surface parking",
-        "Heat included",
-        "Water included"
-      ],
+      "rent": {
+        "Bachelor": "$1,050/month",
+        "1 bedroom": "$1,330/month",
+        "2 bedroom": "$1,650/month"
+      },
+      "amenities": ["Balconies", "Dishwasher", "In-suite storage", "Laundry facilities", "Surface parking"],
+      "utilities_included": ["Heat", "Water"],
       "pet_friendly": true,
-      "parking": true
+      "parking": "Surface parking available",
+      "highlights": "Most affordable bachelor units in the area, great greenery and parks nearby",
+      "availability": "Available now"
+    },
+    {
+      "name": "Parkview Towers",
+      "address": "350 Parkview Crescent SE, Calgary, AB",
+      "neighborhood": "Parkview",
+      "city": "Calgary",
+      "unit_types": ["1 bedroom", "2 bedroom", "3 bedroom"],
+      "rent": {
+        "1 bedroom": "$1,650/month",
+        "2 bedroom": "$2,100/month",
+        "3 bedroom": "$2,600/month"
+      },
+      "amenities": ["Rooftop terrace", "Gym", "Concierge", "In-suite laundry", "Dishwasher", "Smart home features", "EV charging"],
+      "utilities_included": ["Water"],
+      "pet_friendly": false,
+      "parking": "Underground parking $150/month",
+      "highlights": "Premium high-rise living, rooftop terrace with city views, modern gym",
+      "availability": "2 bedroom available now, others on waitlist"
+    },
+    {
+      "name": "Riverside Lofts",
+      "address": "88 Riverview Close SE, Calgary, AB",
+      "neighborhood": "Riverview",
+      "city": "Calgary",
+      "unit_types": ["Loft", "2 bedroom"],
+      "rent": {
+        "Loft": "$1,800/month",
+        "2 bedroom": "$2,200/month"
+      },
+      "amenities": ["Exposed brick", "High ceilings", "In-suite laundry", "Dishwasher", "Bike storage", "River views"],
+      "utilities_included": ["Water"],
+      "pet_friendly": true,
+      "parking": "Surface parking $75/month",
+      "highlights": "Unique loft-style units with exposed brick and high ceilings, river views",
+      "availability": "Loft available now"
+    },
+    {
+      "name": "Northgate Commons",
+      "address": "1420 Centre Street N, Calgary, AB",
+      "neighborhood": "Thorncliffe",
+      "city": "Calgary",
+      "unit_types": ["Bachelor", "1 bedroom"],
+      "rent": {
+        "Bachelor": "$950/month",
+        "1 bedroom": "$1,150/month"
+      },
+      "amenities": ["Laundry facilities", "Storage locker", "Surface parking"],
+      "utilities_included": ["Heat", "Water", "Electricity"],
+      "pet_friendly": false,
+      "parking": "Surface parking included",
+      "highlights": "Most affordable option, all utilities included, great for students and budget-conscious renters",
+      "availability": "Available now"
+    },
+    {
+      "name": "Kensington Place",
+      "address": "215 10 St NW, Calgary, AB",
+      "neighborhood": "Kensington",
+      "city": "Calgary",
+      "unit_types": ["1 bedroom", "2 bedroom"],
+      "rent": {
+        "1 bedroom": "$1,750/month",
+        "2 bedroom": "$2,350/month"
+      },
+      "amenities": ["In-suite laundry", "Dishwasher", "Fitness center", "Rooftop patio", "Bike storage", "Package lockers"],
+      "utilities_included": ["Water"],
+      "pet_friendly": true,
+      "parking": "Underground parking $125/month",
+      "highlights": "Trendy Kensington neighbourhood, walkable to cafes, boutiques and Bow River pathways",
+      "availability": "1 bedroom available now"
+    },
+    {
+      "name": "Mission Grande",
+      "address": "534 24 Ave SW, Calgary, AB",
+      "neighborhood": "Mission",
+      "city": "Calgary",
+      "unit_types": ["1 bedroom", "2 bedroom", "Penthouse"],
+      "rent": {
+        "1 bedroom": "$1,950/month",
+        "2 bedroom": "$2,700/month",
+        "Penthouse": "$3,800/month"
+      },
+      "amenities": ["Concierge", "Rooftop pool", "Fitness center", "In-suite laundry", "Quartz countertops", "Floor-to-ceiling windows", "Wine storage"],
+      "utilities_included": [],
+      "pet_friendly": true,
+      "parking": "Underground parking $175/month",
+      "highlights": "Luxury living in Mission, rooftop pool, floor-to-ceiling windows, penthouse suites available",
+      "availability": "1 bedroom available now, penthouse available next month"
     }
   ]
 }
