@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RE — Voice Intelligence System</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #080c0e;
+    --bg-secondary: #0d1417;
+    --bg-panel: #0f1a1e;
+    --bg-panel-alt: #111f24;
+    --border: #1a2f36;
+    --border-bright: #1f3a42;
+    --amber: #f0a500;
+    --amber-dim: #8a5e00;
+    --amber-glow: rgba(240, 165, 0, 0.12);
+    --cyan: #00c8d4;
+    --cyan-dim: #005a60;
+    --cyan-glow: rgba(0, 200, 212, 0.1);
+    --red: #e84545;
+    --red-dim: #6b1f1f;
+    --green: #2ecc71;
+    --green-dim: #1a5e38;
+    --text-primary: #c8d8dc;
+    --text-secondary: #5a7a82;
+    --text-dim: #2a4048;
+    --font: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font);
+    font-size: 12px;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Noise texture */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 99;
+    opacity: 0.4;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 48px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .topbar::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--amber-dim), transparent);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-mark {
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid var(--amber);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: 0.05em;
+    position: relative;
+  }
+
+  .logo-mark::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: var(--amber-glow);
+  }
+
+  .logo-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .logo-sub {
+    font-size: 9px;
+    color: var(--text-secondary);
+    letter-spacing: 0.1em;
+    margin-top: 1px;
+  }
+
+  .topbar-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+  }
+
+  .system-time {
+    color: var(--amber);
+    font-weight: 500;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim);
+  }
+
+  .status-dot.active {
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse-green 2s ease-in-out infinite;
+  }
+
+  .status-dot.warning {
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+    animation: pulse-amber 1s ease-in-out infinite;
+  }
+
+  .status-dot.error {
+    background: var(--red);
+    box-shadow: 0 0 6px var(--red);
+  }
+
+  @keyframes pulse-green {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  @keyframes pulse-amber {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    grid-template-rows: 1fr 180px;
+    height: calc(100vh - 48px);
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .panel {
+    background: var(--bg-panel);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+  }
+
+  .panel-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-label::before {
+    content: '';
+    width: 3px;
+    height: 10px;
+    background: var(--amber);
+  }
+
+  .panel-tag {
+    font-size: 8px;
+    padding: 2px 6px;
+    border: 1px solid var(--border-bright);
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+  }
+
+  /* TRANSCRIPT PANEL */
+  .transcript-panel {
+    grid-row: 1;
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .transcript-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-bright) transparent;
+  }
+
+  .transcript-body::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  .transcript-body::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .transcript-body::-webkit-scrollbar-thumb {
+    background: var(--border-bright);
+  }
+
+  .message {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: fade-in-up 0.3s ease forwards;
+    opacity: 0;
+  }
+
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message-meta {
+    font-size: 9px;
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .message-role {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .message-role.user { color: var(--cyan); }
+  .message-role.assistant { color: var(--amber); }
+
+  .message-time {
+    color: var(--text-dim);
+  }
+
+  .message-text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    padding-left: 12px;
+    border-left: 2px solid var(--border-bright);
+  }
+
+  .message.user .message-text {
+    border-left-color: var(--cyan-dim);
+    color: #8ab8c0;
+  }
+
+  .message.assistant .message-text {
+    border-left-color: var(--amber-dim);
+    color: var(--text-primary);
+  }
+
+  /* Live indicator */
+  .live-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    min-height: 32px;
+  }
+
+  .live-text {
+    color: var(--text-primary);
+    font-style: italic;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 6px;
+    height: 12px;
+    background: var(--amber);
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+    margin-left: 2px;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* METRICS PANEL */
+  .metrics-panel {
+    grid-row: 1;
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .metrics-body {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+  }
+
+  /* Latency section */
+  .section-title {
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .latency-item {
+    margin-bottom: 14px;
+  }
+
+  .latency-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+
+  .latency-name {
+    font-size: 10px;
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+  }
+
+  .latency-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--amber);
+    letter-spacing: -0.02em;
+    transition: all 0.3s ease;
+  }
+
+  .latency-value.fast { color: var(--green); }
+  .latency-value.medium { color: var(--amber); }
+  .latency-value.slow { color: var(--red); }
+
+  .latency-unit {
+    font-size: 9px;
+    color: var(--text-secondary);
+    margin-left: 2px;
+  }
+
+  .latency-bar-track {
+    height: 3px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .latency-bar-fill {
+    height: 100%;
+    background: var(--amber);
+    width: 0%;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  .latency-bar-fill::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(90deg, transparent, rgba(240,165,0,0.6));
+  }
+
+  .latency-bar-fill.fast { background: var(--green); }
+  .latency-bar-fill.fast::after { background: linear-gradient(90deg, transparent, rgba(46,204,113,0.6)); }
+  .latency-bar-fill.slow { background: var(--red); }
+  .latency-bar-fill.slow::after { background: linear-gradient(90deg, transparent, rgba(232,69,69,0.6)); }
+
+  /* Total */
+  .total-block {
+    border: 1px solid var(--border-bright);
+    padding: 12px;
+    background: var(--bg-panel-alt);
+    position: relative;
+  }
+
+  .total-block::before {
+    content: 'TOTAL RESPONSE';
+    position: absolute;
+    top: -5px;
+    left: 10px;
+    font-size: 7px;
+    letter-spacing: 0.15em;
+    background: var(--bg-panel-alt);
+    padding: 0 4px;
+    color: var(--text-secondary);
+  }
+
+  .total-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    transition: all 0.3s ease;
+  }
+
+  .total-value.fast { color: var(--green); }
+  .total-value.slow { color: var(--red); }
+
+  .total-unit {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .total-rating {
+    font-size: 9px;
+    margin-top: 6px;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    position: relative;
+  }
+
+  /* Component status */
+  .component-status {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .component-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-primary);
+    transition: border-color 0.3s ease;
+  }
+
+  .component-row.active {
+    border-color: var(--amber-dim);
+    background: var(--amber-glow);
+  }
+
+  .component-row.ok {
+    border-color: var(--green-dim);
+  }
+
+  .component-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .component-icon {
+    font-size: 10px;
+    width: 16px;
+    text-align: center;
+  }
+
+  .component-name {
+    font-size: 10px;
+    color: var(--text-secondary);
+    letter-spacing: 0.06em;
+  }
+
+  .component-state {
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+
+  .component-state.listening {
+    border-color: var(--cyan-dim);
+    color: var(--cyan);
+    background: var(--cyan-glow);
+  }
+
+  .component-state.processing {
+    border-color: var(--amber-dim);
+    color: var(--amber);
+    background: var(--amber-glow);
+    animation: flicker 0.8s ease infinite;
+  }
+
+  .component-state.speaking {
+    border-color: var(--green-dim);
+    color: var(--green);
+    background: rgba(46,204,113,0.08);
+  }
+
+  .component-state.idle {
+    border-color: var(--border);
+    color: var(--text-dim);
+  }
+
+  .component-state.error {
+    border-color: var(--red-dim);
+    color: var(--red);
+  }
+
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* BOTTOM PANEL - session stats */
+  .stats-panel {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stats-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1px;
+    background: var(--border);
+    overflow: hidden;
+  }
+
+  .stat-cell {
+    background: var(--bg-panel);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-cell::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border-bright);
+    transition: background 0.3s ease;
+  }
+
+  .stat-cell.highlight::before {
+    background: var(--amber);
+  }
+
+  .stat-label {
+    font-size: 8px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-top: 4px;
+    transition: color 0.3s ease;
+  }
+
+  .stat-sub {
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* Waveform */
+  .waveform-cell {
+    grid-column: span 2;
+    padding: 14px 16px;
+  }
+
+  .waveform {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 40px;
+  }
+
+  .wave-bar {
+    flex: 1;
+    background: var(--border-bright);
+    border-radius: 1px;
+    height: 4px;
+    transition: height 0.1s ease, background 0.2s ease;
+  }
+
+  .wave-bar.active {
+    background: var(--amber);
+    animation: wave-animate 0.4s ease infinite;
+  }
+
+  @keyframes wave-animate {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(var(--scale, 3)); }
+  }
+
+  /* Log panel scrollbar */
+  .log-line {
+    font-size: 10px;
+    color: var(--text-secondary);
+    padding: 2px 0;
+    display: flex;
+    gap: 10px;
+  }
+
+  .log-time { color: var(--text-dim); min-width: 60px; }
+  .log-tag { min-width: 50px; }
+  .log-tag.asr { color: var(--cyan); }
+  .log-tag.llm { color: var(--amber); }
+  .log-tag.tts { color: #a78bfa; }
+  .log-tag.sys { color: var(--text-dim); }
+  .log-msg { color: var(--text-secondary); }
+
+  /* Connecting overlay */
+  .connecting-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 200;
+    transition: opacity 0.5s ease;
+  }
+
+  .connecting-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .connecting-logo {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--amber);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .connecting-status {
+    font-size: 10px;
+    color: var(--text-secondary);
+    letter-spacing: 0.12em;
+  }
+
+  .connecting-bar {
+    width: 200px;
+    height: 1px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .connecting-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, var(--amber), transparent);
+    animation: scan 1.5s ease-in-out infinite;
+  }
+
+  @keyframes scan {
+    to { left: 100%; }
+  }
+
+  .retry-btn {
+    margin-top: 16px;
+    padding: 8px 20px;
+    border: 1px solid var(--amber-dim);
+    background: transparent;
+    color: var(--amber);
+    font-family: var(--font);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: none;
+  }
+
+  .retry-btn:hover {
+    background: var(--amber-glow);
+  }
+</style>
+</head>
+<body>
+
+<!-- Connecting overlay -->
+<div class="connecting-overlay" id="connectingOverlay">
+  <div class="connecting-logo">Real Estate // Voice Intelligence</div>
+  <div class="connecting-bar"></div>
+  <div class="connecting-status" id="connectingStatus">Establishing connection to pipeline...</div>
+  <button class="retry-btn" id="retryBtn" onclick="connect()">Retry Connection</button>
+</div>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">RE</div>
+    <div>
+      <div class="logo-text">Real Estate Voice Assistant</div>
+      <div class="logo-sub">Real-time AI Voice Agent · v1.0.0</div>
+    </div>
+  </div>
+
+  <div class="topbar-center">
+    <span>SESSION</span>
+    <span class="system-time" id="sessionTime">00:00:00</span>
+    <span>·</span>
+    <span id="clockDisplay">--:--:--</span>
+  </div>
+
+  <div class="topbar-right">
+    <div class="status-pill">
+      <div class="status-dot" id="dotDeepgram"></div>
+      <span>ASR</span>
+    </div>
+    <div class="status-pill">
+      <div class="status-dot" id="dotGroq"></div>
+      <span>LLM</span>
+    </div>
+    <div class="status-pill">
+      <div class="status-dot" id="dotElevenlabs"></div>
+      <span>TTS</span>
+    </div>
+    <div class="status-pill">
+      <div class="status-dot active" id="dotWs"></div>
+      <span>WS</span>
+    </div>
+  </div>
+</div>
+
+<!-- Main grid -->
+<div class="main">
+
+  <!-- Transcript panel -->
+  <div class="panel transcript-panel">
+    <div class="panel-header">
+      <div class="panel-label">Live Transcript</div>
+      <div class="panel-tag" id="msgCount">0 EXCHANGES</div>
+    </div>
+    <div class="transcript-body" id="transcriptBody">
+      <div style="color: var(--text-dim); font-size: 11px; margin: auto; text-align: center; padding: 40px 0;">
+        Waiting for voice input...<br>
+        <span style="font-size: 9px; margin-top: 8px; display: block; letter-spacing: 0.1em;">SPEAK INTO YOUR MICROPHONE TO BEGIN</span>
+      </div>
+    </div>
+    <div class="live-line" id="liveLine" style="border-top: 1px solid var(--border);">
+      <span style="font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em;">LIVE</span>
+      <span class="live-text" id="liveText"></span>
+      <span class="cursor" id="liveCursor" style="display:none"></span>
+    </div>
+  </div>
+
+  <!-- Metrics panel -->
+  <div class="panel metrics-panel">
+    <div class="panel-header">
+      <div class="panel-label">Latency Monitor</div>
+      <div class="panel-tag" id="avgTotal">AVG — ms</div>
+    </div>
+    <div class="metrics-body">
+
+      <div>
+        <div class="section-title">Per-Component Breakdown</div>
+
+        <div class="latency-item">
+          <div class="latency-header">
+            <span class="latency-name">ASR · Deepgram</span>
+            <span>
+              <span class="latency-value" id="asrVal">—</span>
+              <span class="latency-unit">ms</span>
+            </span>
+          </div>
+          <div class="latency-bar-track">
+            <div class="latency-bar-fill" id="asrBar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="latency-item">
+          <div class="latency-header">
+            <span class="latency-name">LLM · Groq</span>
+            <span>
+              <span class="latency-value" id="llmVal">—</span>
+              <span class="latency-unit">ms</span>
+            </span>
+          </div>
+          <div class="latency-bar-track">
+            <div class="latency-bar-fill" id="llmBar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="latency-item">
+          <div class="latency-header">
+            <span class="latency-name">TTS · ElevenLabs</span>
+            <span>
+              <span class="latency-value" id="ttsVal">—</span>
+              <span class="latency-unit">ms</span>
+            </span>
+          </div>
+          <div class="latency-bar-track">
+            <div class="latency-bar-fill" id="ttsBar" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="total-block">
+        <div class="total-value" id="totalVal">—</div>
+        <div class="total-unit">milliseconds total response</div>
+        <div class="total-rating" id="totalRating">Awaiting first response...</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <div class="section-title">Component Status</div>
+        <div class="component-status">
+          <div class="component-row" id="compAsr">
+            <div class="component-left">
+              <span class="component-icon">◎</span>
+              <span class="component-name">Deepgram ASR</span>
+            </div>
+            <span class="component-state idle" id="stateAsr">IDLE</span>
+          </div>
+          <div class="component-row" id="compLlm">
+            <div class="component-left">
+              <span class="component-icon">◈</span>
+              <span class="component-name">Groq LLM</span>
+            </div>
+            <span class="component-state idle" id="stateLlm">IDLE</span>
+          </div>
+          <div class="component-row" id="compTts">
+            <div class="component-left">
+              <span class="component-icon">◉</span>
+              <span class="component-name">ElevenLabs TTS</span>
+            </div>
+            <span class="component-state idle" id="stateTts">IDLE</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Stats panel -->
+  <div class="panel stats-panel">
+    <div class="panel-header">
+      <div class="panel-label">Session Analytics</div>
+      <div class="panel-tag" id="sessionTag">LIVE SESSION</div>
+    </div>
+    <div class="stats-body">
+
+      <div class="stat-cell" id="cellExchanges">
+        <div class="stat-label">Exchanges</div>
+        <div class="stat-value" id="statExchanges">0</div>
+        <div class="stat-sub">this session</div>
+      </div>
+
+      <div class="stat-cell">
+        <div class="stat-label">Avg LLM</div>
+        <div class="stat-value" id="statAvgLlm">—</div>
+        <div class="stat-sub">milliseconds</div>
+      </div>
+
+      <div class="stat-cell">
+        <div class="stat-label">Avg TTS</div>
+        <div class="stat-value" id="statAvgTts">—</div>
+        <div class="stat-sub">milliseconds</div>
+      </div>
+
+      <div class="stat-cell highlight">
+        <div class="stat-label">Avg Total</div>
+        <div class="stat-value" id="statAvgTotal" style="color: var(--amber)">—</div>
+        <div class="stat-sub">milliseconds</div>
+      </div>
+
+      <div class="stat-cell waveform-cell">
+        <div class="stat-label">Voice Activity</div>
+        <div class="waveform" id="waveform">
+          <!-- Generated by JS -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────
+  let ws = null;
+  let sessionStart = Date.now();
+  let exchanges = 0;
+  let llmHistory = [];
+  let ttsHistory = [];
+  let totalHistory = [];
+  let firstMessage = true;
+  let isFirstMessage = true;
+
+  // ── WebSocket ──────────────────────────────────────────
+  function connect() {
+    document.getElementById('retryBtn').style.display = 'none';
+    document.getElementById('connectingStatus').textContent = 'Establishing connection to pipeline...';
+
+    ws = new WebSocket('ws://localhost:8765');
+
+    ws.onopen = () => {
+      document.getElementById('connectingOverlay').classList.add('hidden');
+      document.getElementById('dotWs').className = 'status-dot active';
+      setComponentState('Asr', 'listening', 'LISTENING');
+      addLog('sys', 'Dashboard connected to pipeline');
+    };
+
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      handleEvent(msg);
+    };
+
+    ws.onclose = () => {
+      document.getElementById('dotWs').className = 'status-dot error';
+      document.getElementById('connectingOverlay').classList.remove('hidden');
+      document.getElementById('connectingStatus').textContent = 'Connection lost. Retrying...';
+      document.getElementById('retryBtn').style.display = 'block';
+      setTimeout(connect, 3000);
+    };
+
+    ws.onerror = () => {
+      document.getElementById('connectingStatus').textContent = 'Pipeline not running. Start src/pipeline.py first.';
+      document.getElementById('retryBtn').style.display = 'block';
+    };
+  }
+
+  // ── Event Handler ──────────────────────────────────────
+  function handleEvent(msg) {
+    switch(msg.type) {
+
+      case 'transcript':
+        // User spoke
+        setComponentState('Asr', 'idle', 'IDLE');
+        setComponentState('Llm', 'processing', 'PROCESSING');
+        document.getElementById('dotDeepgram').className = 'status-dot active';
+        addMessage('user', msg.text, msg.asr_latency);
+        updateLiveText('');
+        hideCursor();
+        addLog('asr', `Transcript (${Math.round(msg.asr_latency)}ms): ${msg.text}`);
+        break;
+
+      case 'llm_response':
+        // LLM responded
+        setComponentState('Llm', 'idle', 'IDLE');
+        setComponentState('Tts', 'processing', 'GENERATING');
+        document.getElementById('dotGroq').className = 'status-dot active';
+        addMessage('assistant', msg.text, null);
+        addLog('llm', `Response (${Math.round(msg.llm_latency)}ms): ${msg.text.substring(0,60)}...`);
+        break;
+
+      case 'latency_report':
+        // Full latency data
+        updateLatency(msg.asr, msg.llm, msg.tts, msg.total);
+        setComponentState('Tts', 'idle', 'IDLE');
+        setComponentState('Asr', 'listening', 'LISTENING');
+        document.getElementById('dotElevenlabs').className = 'status-dot active';
+        addLog('tts', `Audio ready (${Math.round(msg.tts)}ms) · Total: ${Math.round(msg.total)}ms`);
+        break;
+
+      case 'speaking':
+        setComponentState('Tts', 'speaking', 'SPEAKING');
+        startWaveform();
+        break;
+
+      case 'ready':
+        setComponentState('Tts', 'idle', 'IDLE');
+        setComponentState('Asr', 'listening', 'LISTENING');
+        stopWaveform();
+        showCursor();
+        break;
+
+      case 'interim':
+        updateLiveText(msg.text);
+        showCursor();
+        setComponentState('Asr', 'listening', 'RECEIVING');
+        break;
+
+      case 'error':
+        addLog('sys', `Error: ${msg.message}`);
+        break;
+    }
+  }
+
+  // ── UI Updates ─────────────────────────────────────────
+  function addMessage(role, text, latency) {
+    const body = document.getElementById('transcriptBody');
+
+    // Remove empty state
+    if (isFirstMessage) {
+      body.innerHTML = '';
+      isFirstMessage = false;
+    }
+
+    exchanges = role === 'user' ? exchanges + 1 : exchanges;
+    document.getElementById('msgCount').textContent = `${exchanges} EXCHANGE${exchanges !== 1 ? 'S' : ''}`;
+    document.getElementById('statExchanges').textContent = exchanges;
+
+    const time = new Date().toTimeString().slice(0,8);
+    const div = document.createElement('div');
+    div.className = `message ${role}`;
+    div.innerHTML = `
+      <div class="message-meta">
+        <span class="message-role ${role}">${role === 'user' ? 'CALLER' : 'AGENT'}</span>
+        <span class="message-time">${time}</span>
+        ${latency ? `<span style="color: var(--text-dim)">· ASR ${Math.round(latency)}ms</span>` : ''}
+      </div>
+      <div class="message-text">${text}</div>
+    `;
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function updateLatency(asr, llm, tts, total) {
+    const MAX = 3000;
+
+    // ASR
+    const asrEl = document.getElementById('asrVal');
+    const asrBar = document.getElementById('asrBar');
+    asrEl.textContent = Math.round(asr);
+    asrBar.style.width = Math.min((asr / MAX) * 100, 100) + '%';
+
+    // LLM
+    const llmEl = document.getElementById('llmVal');
+    const llmBar = document.getElementById('llmBar');
+    llmEl.textContent = Math.round(llm);
+    llmBar.style.width = Math.min((llm / MAX) * 100, 100) + '%';
+    const llmClass = llm < 500 ? 'fast' : llm < 1000 ? 'medium' : 'slow';
+    llmEl.className = `latency-value ${llmClass}`;
+    llmBar.className = `latency-bar-fill ${llmClass}`;
+
+    // TTS
+    const ttsEl = document.getElementById('ttsVal');
+    const ttsBar = document.getElementById('ttsBar');
+    ttsEl.textContent = Math.round(tts);
+    ttsBar.style.width = Math.min((tts / MAX) * 100, 100) + '%';
+    const ttsClass = tts < 600 ? 'fast' : tts < 1200 ? 'medium' : 'slow';
+    ttsEl.className = `latency-value ${ttsClass}`;
+    ttsBar.className = `latency-bar-fill ${ttsClass}`;
+
+    // Total
+    const totalEl = document.getElementById('totalVal');
+    totalEl.textContent = Math.round(total);
+    const totalClass = total < 1500 ? 'fast' : total < 2500 ? '' : 'slow';
+    totalEl.className = `total-value ${totalClass}`;
+
+    const rating = total < 1000 ? '● EXCELLENT — Sub-second response'
+                 : total < 1500 ? '● GOOD — Natural conversation speed'
+                 : total < 2500 ? '◐ ACCEPTABLE — Slight delay perceived'
+                 : '○ SLOW — Optimization required';
+    document.getElementById('totalRating').textContent = rating;
+    document.getElementById('avgTotal').textContent = `LAST ${Math.round(total)}ms`;
+
+    // History
+    llmHistory.push(llm);
+    ttsHistory.push(tts);
+    totalHistory.push(total);
+
+    const avg = arr => Math.round(arr.reduce((a,b) => a+b, 0) / arr.length);
+    document.getElementById('statAvgLlm').textContent = avg(llmHistory);
+    document.getElementById('statAvgTts').textContent = avg(ttsHistory);
+    document.getElementById('statAvgTotal').textContent = avg(totalHistory);
+  }
+
+  function setComponentState(comp, stateClass, label) {
+    const el = document.getElementById(`state${comp}`);
+    el.className = `component-state ${stateClass}`;
+    el.textContent = label;
+  }
+
+  function updateLiveText(text) {
+    document.getElementById('liveText').textContent = text;
+  }
+
+  function showCursor() {
+    document.getElementById('liveCursor').style.display = 'inline-block';
+  }
+
+  function hideCursor() {
+    document.getElementById('liveCursor').style.display = 'none';
+  }
+
+  // ── Waveform ───────────────────────────────────────────
+  let waveInterval = null;
+  const waveform = document.getElementById('waveform');
+
+  // Build waveform bars
+  for (let i = 0; i < 24; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'wave-bar';
+    bar.style.setProperty('--scale', (Math.random() * 4 + 2).toFixed(1));
+    waveform.appendChild(bar);
+  }
+
+  function startWaveform() {
+    const bars = waveform.querySelectorAll('.wave-bar');
+    bars.forEach(b => {
+      b.classList.add('active');
+      b.style.setProperty('--scale', (Math.random() * 5 + 2).toFixed(1));
+    });
+    waveInterval = setInterval(() => {
+      bars.forEach(b => {
+        b.style.setProperty('--scale', (Math.random() * 5 + 2).toFixed(1));
+        b.style.animationDuration = (Math.random() * 0.3 + 0.2).toFixed(2) + 's';
+      });
+    }, 200);
+  }
+
+  function stopWaveform() {
+    if (waveInterval) clearInterval(waveInterval);
+    const bars = waveform.querySelectorAll('.wave-bar');
+    bars.forEach(b => b.classList.remove('active'));
+  }
+
+  // ── Log ────────────────────────────────────────────────
+  function addLog(tag, msg) {
+    // Just console for now — can add a log panel later
+    const time = new Date().toTimeString().slice(0,8);
+    console.log(`[${time}] [${tag.toUpperCase()}] ${msg}`);
+  }
+
+  // ── Clock ──────────────────────────────────────────────
+  setInterval(() => {
+    const now = new Date();
+    document.getElementById('clockDisplay').textContent = now.toTimeString().slice(0,8);
+    const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+    const h = String(Math.floor(elapsed / 3600)).padStart(2,'0');
+    const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2,'0');
+    const s = String(elapsed % 60).padStart(2,'0');
+    document.getElementById('sessionTime').textContent = `${h}:${m}:${s}`;
+  }, 1000);
+
+  // ── Init ───────────────────────────────────────────────
+  connect();
+</script>
+</body>
+</html>
