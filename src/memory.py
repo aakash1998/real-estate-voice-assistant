@@ -13,11 +13,11 @@ class HybridMemory:
         window_size: how many recent messages to keep in full
         summary_threshold: how many messages before we summarize old ones
         
-        Example with window_size=4, summary_threshold=6:
-        - Turns 1-6 accumulate
-        - At turn 7, turns 1-2 get summarized
-        - Turns 3-6 stay in full (window of 4)
-        - Turn 7 added to window
+        Example with window_size=4, summary_threshold=10:
+        - Turns 1-10 accumulate
+        - At turn 11, turns 1-2 get summarized
+        - Turns 3-10 stay in full (window of 4)
+        - Turn 11 added to window
         """
         self.window_size = window_size
         self.summary_threshold = summary_threshold
@@ -44,6 +44,9 @@ class HybridMemory:
 
         # Split: messages to summarize vs messages to keep
         messages_to_summarize = self.recent_messages[:-self.window_size]
+        print(f"[MEMORY DEBUG] Messages being summarized:")
+        for m in messages_to_summarize:
+            print(f"  {m['role']}: {m['content']}")
         self.recent_messages = self.recent_messages[-self.window_size:]
 
         print(f"[MEMORY] Summarizing {len(messages_to_summarize)} old messages...")

@@ -22,7 +22,7 @@ FALLBACK_RESPONSE = "I'm having a technical issue right now. Please try again in
 
 # One memory instance per session
 # In production this would be per-caller session
-memory = HybridMemory(window_size=4, summary_threshold=6)
+memory = HybridMemory(window_size=4, summary_threshold=10)
 
 async def call_groq(
     transcript: str,
