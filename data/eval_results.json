@@ -1,0 +1,739 @@
+{
+  "summary": {
+    "total": 30,
+    "retrieval": {
+      "precision_at_1": 86.7,
+      "precision_at_3": 90.0,
+      "mrr": 0.89
+    },
+    "quality": {
+      "faithfulness": 80.8,
+      "relevance": 96.7,
+      "completeness": 55.0
+    },
+    "overall_score": 83.0,
+    "generated_at": "2026-04-14T06:43:36.522137"
+  },
+  "results": [
+    {
+      "id": 1,
+      "question": "Do you have any pet friendly apartments?",
+      "category": "pet",
+      "response": "We do have pet-friendly apartments available. Both Peyto Apartments and Kensington Place allow pets, and Mission Riverwalk also has a pet-friendly policy.",
+      "latency_ms": 912,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Peyto Apartments",
+          "Kensington Place",
+          "Mission Riverwalk"
+        ]
+      },
+      "quality": {
+        "faithfulness": 0.75,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer is mostly faithful as it correctly identifies pet-friendly apartments, but it misses that Belmont House also allows pets, and it does not provide the specific unit types or availability for each property."
+      },
+      "overall_score": 0.875
+    },
+    {
+      "id": 2,
+      "question": "What is the cheapest apartment available?",
+      "category": "budget",
+      "response": "The cheapest apartment available is the bachelor unit at Northgate Commons for $950/month.",
+      "latency_ms": 417,
+      "retrieval": {
+        "precision_at_1": 0.0,
+        "precision_at_3": 1.0,
+        "mrr": 0.5,
+        "top_3_retrieved": [
+          "Peyto Apartments",
+          "Northgate Commons",
+          "Forest Hills"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 1.0,
+        "reasoning": "The answer accurately identifies the cheapest apartment, provides the correct unit type, and includes the exact monthly rent, all of which are directly supported by the retrieved context."
+      },
+      "overall_score": 0.75
+    },
+    {
+      "id": 3,
+      "question": "Do you have anything under $1,000 a month?",
+      "category": "budget",
+      "response": "We do have a few options under $1,000 a month. The Hillhurst Manor has a bachelor suite available for $950 a month.",
+      "latency_ms": 416,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Hillhurst Manor",
+          "Maple Court Apartments",
+          "Bowness Riverside"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer is entirely faithful and relevant, but lacks the unit type and address of the Hillhurst Manor, which are important details."
+      },
+      "overall_score": 0.917
+    },
+    {
+      "id": 4,
+      "question": "Which properties include all utilities?",
+      "category": "utilities",
+      "response": "Northgate Commons includes all utilities in the rent, and Aspen Woods Residences includes heat and water utilities.",
+      "latency_ms": 427,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Northgate Commons",
+          "Tuscany Peaks",
+          "Aspen Woods Residences"
+        ]
+      },
+      "quality": {
+        "faithfulness": 0.5,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer partially accurately reflects the context, but incorrectly states that Northgate Commons includes all utilities, when in fact it only includes heat, water, and electricity."
+      },
+      "overall_score": 0.833
+    },
+    {
+      "id": 5,
+      "question": "Do you have anything with underground parking?",
+      "category": "parking",
+      "response": "We do have a few properties with underground parking. \n\nOne option is Cameron Manor, which includes underground parking with your rent. It's located in the Marda Loop area, close to shops and cafes.",
+      "latency_ms": 7581,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Varsity Estates",
+          "Cameron Manor",
+          "Crescent Ridge Towers"
+        ]
+      },
+      "quality": {
+        "faithfulness": 0.75,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer is mostly faithful as it correctly identifies properties with underground parking, but it misses some details and does not mention the availability of underground parking in other properties."
+      },
+      "overall_score": 0.875
+    },
+    {
+      "id": 6,
+      "question": "What properties are available in Kensington?",
+      "category": "neighborhood",
+      "response": "We have two properties available in Kensington. The Kensington Flats and the Kensington Place are both available now.",
+      "latency_ms": 7927,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Kensington Flats",
+          "Kensington Place",
+          "Hillhurst Manor"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 1.0,
+        "reasoning": "The answer accurately lists all available properties in Kensington, includes all relevant details, and does not contain any claims not supported by the context."
+      },
+      "overall_score": 1.0
+    },
+    {
+      "id": 7,
+      "question": "Do you have any luxury apartments?",
+      "category": "luxury",
+      "response": "We do have some luxury options available. I'd like to know, what is your budget per month?",
+      "latency_ms": 7515,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Mission Grande",
+          "Aspen Woods Residences",
+          "Eau Claire Residences"
+        ]
+      },
+      "quality": {
+        "faithfulness": 0.5,
+        "relevance": 1.0,
+        "completeness": 0.0,
+        "reasoning": "The answer partially acknowledges the user's question but fails to provide specific luxury options and asks for additional information, resulting in a low faithfulness score."
+      },
+      "overall_score": 0.75
+    },
+    {
+      "id": 8,
+      "question": "What properties are available in Mission?",
+      "category": "neighborhood",
+      "response": "We have two properties available in Mission. The Mission Grande has a 1 bedroom unit available now, and the penthouse suite is available next month.",
+      "latency_ms": 6576,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Mission Grande",
+          "Mission Riverwalk",
+          "Tuscany Peaks"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer is faithful and relevant, but lacks information about the Mission Riverwalk property, which is also available in Mission."
+      },
+      "overall_score": 0.917
+    },
+    {
+      "id": 9,
+      "question": "Do you have any properties with a rooftop?",
+      "category": "amenity",
+      "response": "We do have a few properties with a rooftop. The Parkview Towers has a rooftop terrace with city views, and the Mission Grande has a rooftop pool.",
+      "latency_ms": 7778,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Parkview Towers",
+          "Mission Riverwalk",
+          "Mission Grande"
+        ]
+      },
+      "quality": {
+        "faithfulness": 0.75,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer is mostly faithful, but it incorrectly stated that the Mission Grande has a rooftop pool, when in fact it has a rooftop pool and other amenities, and it missed the rooftop patio in the Mission Riverwalk property."
+      },
+      "overall_score": 0.875
+    },
+    {
+      "id": 10,
+      "question": "What is the rent at Belmont House?",
+      "category": "specific_property",
+      "response": "The rent at Belmont House is $1,430 per month for a 1 bedroom unit and $1,855 per month for a 2 bedroom unit.",
+      "latency_ms": 7453,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Belmont House",
+          "Forest Hills",
+          "The Winston"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 1.0,
+        "reasoning": "The answer accurately and completely addresses the user's question, including all relevant details from the retrieved context."
+      },
+      "overall_score": 1.0
+    },
+    {
+      "id": 11,
+      "question": "Is Peyto Apartments pet friendly?",
+      "category": "specific_property",
+      "response": "Yes, Peyto Apartments is pet friendly, pets are allowed.",
+      "latency_ms": 6457,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Peyto Apartments",
+          "Tuscany Peaks",
+          "Panorama Heights"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 1.0,
+        "reasoning": "The answer accurately reflects the retrieved context, directly addresses the user's question, and includes all relevant details."
+      },
+      "overall_score": 1.0
+    },
+    {
+      "id": 12,
+      "question": "Does Cameron Manor have parking?",
+      "category": "specific_property",
+      "response": "Yes, Cameron Manor has underground parking included.",
+      "latency_ms": 7646,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Cameron Manor",
+          "Marlborough Gardens",
+          "Varsity Estates"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 1.0,
+        "reasoning": "The answer accurately and completely addresses the user's question, including all relevant details from the context."
+      },
+      "overall_score": 1.0
+    },
+    {
+      "id": 13,
+      "question": "What amenities does Parkview Towers have?",
+      "category": "specific_property",
+      "response": "Parkview Towers has a rooftop terrace, gym, concierge, in-suite laundry, dishwasher, smart home features, and EV charging.",
+      "latency_ms": 6656,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Parkview Towers",
+          "Forest Hills",
+          "Crescent Ridge Towers"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 1.0,
+        "reasoning": "The answer accurately lists all the amenities mentioned in the retrieved context, directly addresses the user's question, and includes all key information."
+      },
+      "overall_score": 1.0
+    },
+    {
+      "id": 14,
+      "question": "Do you have anything available right now?",
+      "category": "availability",
+      "response": "We do have some properties available right now. I'd like to know, what is your budget per month?",
+      "latency_ms": 6483,
+      "retrieval": {
+        "precision_at_1": 0.0,
+        "precision_at_3": 0.0,
+        "mrr": 0.0,
+        "top_3_retrieved": [
+          "Forest Hills",
+          "Bowness Riverside",
+          "Cougar Ridge Estates"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer is faithful and relevant as it directly addresses the user's question, but it lacks completeness as it does not provide any specific information about the available properties."
+      },
+      "overall_score": 0.417
+    },
+    {
+      "id": 15,
+      "question": "What properties are available next month?",
+      "category": "availability",
+      "response": "All three properties, Riverstone Lofts, Ramsay Corner Homes, and Sunnyside Views, are available next month.",
+      "latency_ms": 6525,
+      "retrieval": {
+        "precision_at_1": 0.0,
+        "precision_at_3": 0.0,
+        "mrr": 0.0,
+        "top_3_retrieved": [
+          "Riverstone Lofts",
+          "Ramsay Corner Homes",
+          "Sunnyside Views"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer is faithful and relevant, but not completely comprehensive as it does not mention the specific availability dates or the number of properties available next month."
+      },
+      "overall_score": 0.417
+    },
+    {
+      "id": 16,
+      "question": "Do you have any bachelor units?",
+      "category": "unit_type",
+      "response": "We do have some bachelor units available. \n\nOne option is the Forest Hills property in Marda Loop, with bachelor units starting at $1,050/month.",
+      "latency_ms": 6643,
+      "retrieval": {
+        "precision_at_1": 0.0,
+        "precision_at_3": 0.0,
+        "mrr": 0.2,
+        "top_3_retrieved": [
+          "Forest Hills",
+          "Hillhurst Manor",
+          "Forest Lawn Lodge"
+        ]
+      },
+      "quality": {
+        "faithfulness": 0.75,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer is mostly faithful, but it only mentions one option for bachelor units and does not provide a complete list of available properties, and it does not mention the price of the bachelor unit at Forest Hills accurately."
+      },
+      "overall_score": 0.408
+    },
+    {
+      "id": 17,
+      "question": "What 3 bedroom apartments do you have?",
+      "category": "unit_type",
+      "response": "We have a 3 bedroom apartment available at Parkview Towers. It's a premium high-rise living experience with a rooftop terrace and modern gym.",
+      "latency_ms": 7769,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Parkview Towers",
+          "Belmont House",
+          "Forest Hills"
+        ]
+      },
+      "quality": {
+        "faithfulness": 0.5,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer partially matches the context, but fails to mention the monthly rent and parking costs for the 3 bedroom apartment at Parkview Towers."
+      },
+      "overall_score": 0.833
+    },
+    {
+      "id": 18,
+      "question": "Do you have anything in Marda Loop?",
+      "category": "neighborhood",
+      "response": "We have a few options in Marda Loop. I'd like to know, what's your budget per month?",
+      "latency_ms": 6428,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Cameron Manor",
+          "Forest Hills",
+          "Riverstone Lofts"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer is faithful and relevant, but not completely comprehensive as it does not mention the specific properties available in Marda Loop."
+      },
+      "overall_score": 0.917
+    },
+    {
+      "id": 19,
+      "question": "Which properties do not allow pets?",
+      "category": "pet",
+      "response": "Based on the properties I have, Capitol Hill Suites and Maple Court Apartments do not allow pets.",
+      "latency_ms": 6553,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Capitol Hill Suites",
+          "Maple Court Apartments",
+          "The Winston"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 1.0,
+        "reasoning": "The answer accurately identifies the properties that do not allow pets, includes all relevant information from the context, and directly addresses the user's question."
+      },
+      "overall_score": 1.0
+    },
+    {
+      "id": 20,
+      "question": "What is the most expensive property you have?",
+      "category": "luxury",
+      "response": "Our most expensive property is the Mission Grande Penthouse, with a monthly rent of $3,800. It's a luxury suite with a rooftop pool and floor-to-ceiling windows.",
+      "latency_ms": 7581,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Mission Grande",
+          "Aspen Woods Residences",
+          "Tuscany Peaks"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer is faithful and relevant, but lacks the specific unit type (Penthouse) and amenities (Concierge, Rooftop pool, Floor-to-ceiling windows) that make the Mission Grande Penthouse unique."
+      },
+      "overall_score": 0.917
+    },
+    {
+      "id": 21,
+      "question": "Do you have anything with mountain views?",
+      "category": "amenity",
+      "response": "We do have a property with mountain views. I'd like to know, what is your budget per month?",
+      "latency_ms": 6828,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Rocky Ridge Residences",
+          "Tuscany Peaks",
+          "Montgomery Place"
+        ]
+      },
+      "quality": {
+        "faithfulness": 0.5,
+        "relevance": 1.0,
+        "completeness": 0.0,
+        "reasoning": "The answer partially claims to have a property with mountain views, but does not specify which one, and fails to include any other relevant information from the context."
+      },
+      "overall_score": 0.75
+    },
+    {
+      "id": 22,
+      "question": "What properties have a gym?",
+      "category": "amenity",
+      "response": "We have a few properties with a gym. The Mission Riverwalk and Parkview Towers both have a gym on site.",
+      "latency_ms": 6615,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Mission Riverwalk",
+          "Crescent Ridge Towers",
+          "Parkview Towers"
+        ]
+      },
+      "quality": {
+        "faithfulness": 0.75,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer is mostly faithful, but incorrectly states that Parkview Towers has a gym on site, when in fact it has multiple amenities including a gym, rooftop terrace, and concierge."
+      },
+      "overall_score": 0.875
+    },
+    {
+      "id": 23,
+      "question": "Do you have anything in Inglewood?",
+      "category": "neighborhood",
+      "response": "We do have a property in Inglewood. I'd like to know, what is your budget per month?",
+      "latency_ms": 6611,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Riverstone Lofts",
+          "Ramsay Corner Homes",
+          "Cameron Manor"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer is faithful and relevant, but not completely comprehensive as it does not mention the specific property in Inglewood, only its existence."
+      },
+      "overall_score": 0.917
+    },
+    {
+      "id": 24,
+      "question": "What loft style apartments do you have?",
+      "category": "unit_type",
+      "response": "We have a few loft-style apartments available. I'd like to know, what is your budget per month?",
+      "latency_ms": 6549,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Riverside Lofts",
+          "Riverstone Lofts",
+          "Mission Riverwalk"
+        ]
+      },
+      "quality": {
+        "faithfulness": 0.5,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer partially acknowledges the user's question but does not provide a direct answer, and it fails to include all available loft-style apartments and their details."
+      },
+      "overall_score": 0.833
+    },
+    {
+      "id": 25,
+      "question": "Do you have anything near a lake?",
+      "category": "amenity",
+      "response": "We do have a property that's located near a lake. The Arbour Lake Landing offers exclusive lake privileges in a vibrant northwest community.",
+      "latency_ms": 6451,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Arbour Lake Landing",
+          "Springbank Hill Villas",
+          "Mission Riverwalk"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer is entirely faithful and relevant, but lacks the specific detail about the property being available next month."
+      },
+      "overall_score": 0.917
+    },
+    {
+      "id": 26,
+      "question": "What properties have a fireplace?",
+      "category": "amenity",
+      "response": "You're looking for properties with a fireplace. I've got two options for you: Springbank Hill Villas and Tuscany Peaks. Both of these properties have a fireplace as an amenity.",
+      "latency_ms": 5707,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Springbank Hill Villas",
+          "Tuscany Peaks",
+          "Riverstone Lofts"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 1.0,
+        "reasoning": "The answer accurately and completely addresses the user's question, including all relevant properties with a fireplace."
+      },
+      "overall_score": 1.0
+    },
+    {
+      "id": 27,
+      "question": "Do you have anything in Bridgeland?",
+      "category": "neighborhood",
+      "response": "We do have a property in Bridgeland. I'd like to know, what is your budget per month?",
+      "latency_ms": 6676,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Bridgeland Heights",
+          "Sunnyside Views",
+          "Belmont House"
+        ]
+      },
+      "quality": {
+        "faithfulness": 1.0,
+        "relevance": 1.0,
+        "completeness": 0.5,
+        "reasoning": "The answer is faithful and relevant, but not completely comprehensive as it does not mention the specific property in Bridgeland, its address, or its details."
+      },
+      "overall_score": 0.917
+    },
+    {
+      "id": 28,
+      "question": "What are your office hours?",
+      "category": "fallback",
+      "response": "Our office hours are Monday to Friday, 9 am to 5 pm.",
+      "latency_ms": 7626,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Belmont House",
+          "Crescent Ridge Towers",
+          "Forest Hills"
+        ]
+      },
+      "quality": {
+        "faithfulness": 0.0,
+        "relevance": 0.0,
+        "completeness": 0.0,
+        "reasoning": "The answer contains claims not in context and does not address the user's question, which is unrelated to office hours."
+      },
+      "overall_score": 0.5
+    },
+    {
+      "id": 29,
+      "question": "Can I book a viewing?",
+      "category": "fallback",
+      "response": "I'd be happy to help you book a viewing. However, I need to know a bit more about your preferences first. What is your budget per month?",
+      "latency_ms": 7439,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Riverstone Lofts",
+          "Springbank Hill Villas",
+          "Bowness Riverside"
+        ]
+      },
+      "quality": {
+        "faithfulness": 0.5,
+        "relevance": 1.0,
+        "completeness": 0.0,
+        "reasoning": "The answer is partially faithful because it does not provide any information from the context, but it is highly relevant because it directly addresses the user's question, and it is not complete because it does not include any details from the context."
+      },
+      "overall_score": 0.75
+    },
+    {
+      "id": 30,
+      "question": "Do you offer short term rentals?",
+      "category": "fallback",
+      "response": "We do offer short-term rentals, but I'd like to know your budget per month to find a suitable property for you.",
+      "latency_ms": 7690,
+      "retrieval": {
+        "precision_at_1": 1.0,
+        "precision_at_3": 1.0,
+        "mrr": 1.0,
+        "top_3_retrieved": [
+          "Sunnyside Views",
+          "Tuscany Peaks",
+          "Belmont House"
+        ]
+      },
+      "quality": {
+        "faithfulness": 0.5,
+        "relevance": 1.0,
+        "completeness": 0.0,
+        "reasoning": "The answer partially addresses the question, but fails to provide any information from the retrieved context to support its claim of offering short-term rentals."
+      },
+      "overall_score": 0.75
+    }
+  ]
+}

@@ -1,0 +1,222 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "question": "Do you have any pet friendly apartments?",
+      "expected_property": "Peyto Apartments",
+      "expected_keywords": ["pet friendly", "pets allowed"],
+      "category": "pet"
+    },
+    {
+      "id": 2,
+      "question": "What is the cheapest apartment available?",
+      "expected_property": "Capitol Hill Suites",
+      "acceptable_properties": ["Capitol Hill Suites", "Northgate Commons", "Hillhurst Manor"],
+      "expected_keywords": ["850", "950", "cheapest", "affordable"],
+      "category": "budget"
+    },
+    {
+      "id": 3,
+      "question": "Do you have anything under $1,000 a month?",
+      "expected_property": "Hillhurst Manor",
+      "expected_keywords": ["950", "850", "900"],
+      "category": "budget"
+    },
+    {
+      "id": 4,
+      "question": "Which properties include all utilities?",
+      "expected_property": "Northgate Commons",
+      "expected_keywords": ["utilities", "heat", "water", "electricity"],
+      "category": "utilities"
+    },
+    {
+      "id": 5,
+      "question": "Do you have anything with underground parking?",
+      "expected_property": "Cameron Manor",
+      "acceptable_properties": ["Cameron Manor", "Varsity Estates", "Crescent Ridge Towers"],
+      "expected_keywords": ["underground parking"],
+      "category": "parking"
+    },
+    {
+      "id": 6,
+      "question": "What properties are available in Kensington?",
+      "expected_property": "Kensington Place",
+      "acceptable_properties": ["Kensington Place", "Kensington Flats"],
+      "expected_keywords": ["Kensington"],
+      "category": "neighborhood"
+    },
+    {
+      "id": 7,
+      "question": "Do you have any luxury apartments?",
+      "expected_property": "Mission Grande",
+      "expected_keywords": ["luxury", "penthouse", "pool"],
+      "category": "luxury"
+    },
+    {
+      "id": 8,
+      "question": "What properties are available in Mission?",
+      "expected_property": "Mission Grande",
+      "expected_keywords": ["Mission"],
+      "category": "neighborhood"
+    },
+    {
+      "id": 9,
+      "question": "Do you have any properties with a rooftop?",
+      "expected_property": "Parkview Towers",
+      "acceptable_properties": ["Parkview Towers", "Mission Grande", "Mission Riverwalk"],
+      "expected_keywords": ["rooftop", "roof"],
+      "category": "amenity"
+    },
+    {
+      "id": 10,
+      "question": "What is the rent at Belmont House?",
+      "expected_property": "Belmont House",
+      "expected_keywords": ["1,430", "1,855", "Belmont"],
+      "category": "specific_property"
+    },
+    {
+      "id": 11,
+      "question": "Is Peyto Apartments pet friendly?",
+      "expected_property": "Peyto Apartments",
+      "expected_keywords": ["pet friendly", "yes", "pets"],
+      "category": "specific_property"
+    },
+    {
+      "id": 12,
+      "question": "Does Cameron Manor have parking?",
+      "expected_property": "Cameron Manor",
+      "expected_keywords": ["underground", "parking", "included"],
+      "category": "specific_property"
+    },
+    {
+      "id": 13,
+      "question": "What amenities does Parkview Towers have?",
+      "expected_property": "Parkview Towers",
+      "expected_keywords": ["rooftop", "gym", "concierge"],
+      "category": "specific_property"
+    },
+    {
+      "id": 14,
+      "question": "Do you have anything available right now?",
+      "expected_property": "Belmont House",
+      "expected_keywords": ["available now"],
+      "category": "availability"
+    },
+    {
+      "id": 15,
+      "question": "What properties are available next month?",
+      "expected_property": "Mission Riverwalk",
+      "expected_keywords": ["next month", "available"],
+      "category": "availability"
+    },
+    {
+      "id": 16,
+      "question": "Do you have any bachelor units?",
+      "expected_property": "The Winston",
+      "expected_keywords": ["bachelor", "1,100"],
+      "category": "unit_type"
+    },
+    {
+      "id": 17,
+      "question": "What 3 bedroom apartments do you have?",
+      "expected_property": "Parkview Towers",
+      "expected_keywords": ["3 bedroom", "2,600"],
+      "category": "unit_type"
+    },
+    {
+      "id": 18,
+      "question": "Do you have anything in Marda Loop?",
+      "expected_property": "Cameron Manor",
+      "expected_keywords": ["Marda Loop"],
+      "category": "neighborhood"
+    },
+    {
+      "id": 19,
+      "question": "Which properties do not allow pets?",
+      "expected_property": "Capitol Hill Suites",
+      "acceptable_properties": ["Capitol Hill Suites", "Parkview Towers", "Northgate Commons", "Maple Court Apartments"],
+      "expected_keywords": ["not pet friendly", "no pets", "pets not allowed"],
+      "category": "pet"
+    },
+    {
+      "id": 20,
+      "question": "What is the most expensive property you have?",
+      "expected_property": "Eau Claire Residences",
+      "acceptable_properties": ["Eau Claire Residences", "Mission Grande"],
+      "expected_keywords": ["3,800", "expensive", "luxury"],
+      "category": "luxury"
+    },
+    {
+      "id": 21,
+      "question": "Do you have anything with mountain views?",
+      "expected_property": "Rocky Ridge Residences",
+      "expected_keywords": ["mountain", "views"],
+      "category": "amenity"
+    },
+    {
+      "id": 22,
+      "question": "What properties have a gym?",
+      "expected_property": "Parkview Towers",
+      "acceptable_properties": ["Parkview Towers", "Mission Riverwalk", "Crescent Ridge Towers"],
+      "expected_keywords": ["gym", "fitness"],
+      "category": "amenity"
+    },
+    {
+      "id": 23,
+      "question": "Do you have anything in Inglewood?",
+      "expected_property": "Riverstone Lofts",
+      "expected_keywords": ["Inglewood"],
+      "category": "neighborhood"
+    },
+    {
+      "id": 24,
+      "question": "What loft style apartments do you have?",
+      "expected_property": "Riverside Lofts",
+      "expected_keywords": ["loft", "exposed brick", "high ceilings"],
+      "category": "unit_type"
+    },
+    {
+      "id": 25,
+      "question": "Do you have anything near a lake?",
+      "expected_property": "Arbour Lake Landing",
+      "expected_keywords": ["lake", "Arbour Lake"],
+      "category": "amenity"
+    },
+    {
+      "id": 26,
+      "question": "What properties have a fireplace?",
+      "expected_property": "Tuscany Peaks",
+      "acceptable_properties": ["Tuscany Peaks", "Springbank Hill Villas"],
+      "expected_keywords": ["fireplace"],
+      "category": "amenity"
+    },
+    {
+      "id": 27,
+      "question": "Do you have anything in Bridgeland?",
+      "expected_property": "Bridgeland Heights",
+      "expected_keywords": ["Bridgeland"],
+      "category": "neighborhood"
+    },
+    {
+      "id": 28,
+      "question": "What are your office hours?",
+      "expected_property": null,
+      "expected_keywords": ["don't have that information", "team will follow up"],
+      "category": "fallback"
+    },
+    {
+      "id": 29,
+      "question": "Can I book a viewing?",
+      "expected_property": null,
+      "expected_keywords": ["don't have that information", "team will follow up"],
+      "category": "fallback"
+    },
+    {
+      "id": 30,
+      "question": "Do you offer short term rentals?",
+      "expected_property": null,
+      "expected_keywords": ["don't have that information", "team will follow up"],
+      "category": "fallback"
+    }
+  ]
+}
