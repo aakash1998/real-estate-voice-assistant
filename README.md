@@ -1,16 +1,17 @@
 # 🎙️ Real Estate Voice Assistant
 
-> A production-grade, real-time AI voice agent that answers property questions over a live phone call — built with streaming audio, per-component latency instrumentation, resilience engineering, and a live operations dashboard.
+> A production-grade, real-time AI voice agent that answers property questions over a live phone call — built with streaming audio, RAG pipeline, hybrid conversation memory, per-component latency instrumentation, resilience engineering, and a live operations dashboard.
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue?style=flat-square&logo=python)
 ![Status](https://img.shields.io/badge/Status-Active-green?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
+![Eval Score](https://img.shields.io/badge/Eval%20Score-83%25-brightgreen?style=flat-square)
 
 ---
 
 ## 📺 Demo
 
-> **LinkedIn Post:** [ADD LINKEDIN POST LINK HERE]
+> **Demo Video + LinkedIn Post:** [https://www.linkedin.com/feed/update/urn:li:activity:7449486634061836288/](https://www.linkedin.com/feed/update/urn:li:activity:7449486634061836288/)
 >
 > **What you will see in the demo:**
 > - A real phone call being answered by the AI agent
@@ -22,17 +23,17 @@
 
 ## 🧠 What This Is
 
-Most AI voice demos are a single API call wrapped in a script. You paste some text, call an LLM, and play audio. That is not engineering — that is glue code.
-
-This project focuses on the real engineering challenges behind a production voice system:
+Most AI voice demos are a single API call wrapped in a script. This project focuses on the real engineering challenges behind a production voice system:
 
 - How do you stream audio continuously without blocking the event loop?
 - How do you measure and budget latency across three independent components?
 - What happens when Deepgram drops mid-call? When Groq times out? When ElevenLabs fails?
 - How do you prevent a voice assistant from listening to and responding to its own voice?
-- How do you display all of this in a live operations dashboard that updates in real time?
+- How do you build a RAG pipeline that retrieves relevant properties semantically?
+- How do you maintain conversation context across a full leasing conversation?
+- How do you measure system quality with real evaluation metrics?
 
-These are the problems that production AI teams deal with every day. This project addresses all of them.
+These are the problems production AI teams deal with every day. This project addresses all of them.
 
 ---
 
@@ -48,7 +49,13 @@ Microphone
     ▼ (streaming WebSocket - linear16, 16000Hz)
 [Deepgram nova-2 ASR]
     │
-    ▼ (final transcript only)
+    ▼ (final transcript)
+[ChromaDB Vector Search + VoyageAI Reranker]
+    │
+    ▼ (top 3 relevant properties)
+[Hybrid Memory - summary + window]
+    │
+    ▼
 [Groq llama-3.1-8b-instant]
     │
     ▼ (response text, max 2 sentences)
@@ -60,47 +67,48 @@ Speaker Output
 
 ### Phone Pipeline
 ```
-Caller Phone
+Caller Phone → [Twilio] → [ngrok tunnel] → [FastAPI Server]
+                                                  │
+                                                  ▼
+                                    [Deepgram ASR - mulaw 8000Hz]
+                                                  │
+                                                  ▼
+                                    [ChromaDB + VoyageAI Reranker]
+                                                  │
+                                                  ▼
+                                         [Groq LLM]
+                                                  │
+                                                  ▼
+                                    [ElevenLabs TTS - ulaw_8000]
+                                                  │
+                                                  ▼
+                                    [Twilio] → Caller's Phone
+```
+
+### RAG Pipeline
+```
+Query: "pet friendly under $1,500"
     │
-    ▼ (PSTN call)
-[Twilio +1 xxx-xxx-xxxx]
+    ▼ (VoyageAI voyage-4 embedding)
+[ChromaDB Vector Search - top 10 candidates]
     │
-    ▼ (WebSocket audio stream - mulaw, 8000Hz)
-[ngrok public tunnel]
+    ▼ (VoyageAI rerank-2)
+[Reranker - scores and reorders top 10]
     │
-    ▼
-[FastAPI Server - port 8000]
-    │
-    ▼
-[Deepgram nova-2 ASR]
-    │
-    ▼
-[Groq llama-3.1-8b-instant]
-    │
-    ▼
-[ElevenLabs eleven_turbo_v2 TTS - ulaw_8000]
-    │
-    ▼
-[Twilio] ──▶ Caller's Phone
+    ▼ (top 3 most relevant)
+[Groq LLM - answers from context only]
 ```
 
 ### Dashboard Architecture
 ```
-[Pipeline - src/pipeline.py]
-    │
-    ▼ (broadcast events via websockets)
-[Broadcaster - src/broadcaster.py - port 8765]
-    │
-    ▼ (WebSocket ws://localhost:8765)
-[Dashboard - static/dashboard.html]
+[Pipeline] → WebSocket (port 8765) → [Browser Dashboard]
 
-Events broadcast:              Dashboard panels:
-· transcript (user spoke)      · Live Transcript panel
-· llm_response (AI replied)    · Latency Monitor panel
-· latency_report (numbers)     · Component Status panel
-· speaking (TTS started)       · Session Analytics panel
-· ready (TTS finished)         · Voice Waveform panel
-· interim (partial transcript)
+Events:                    Panels:
+· transcript               · Live Transcript
+· llm_response             · Latency Monitor
+· latency_report           · Component Status
+· speaking                 · Session Analytics
+· ready                    · Voice Waveform
 ```
 
 ---
@@ -109,56 +117,30 @@ Events broadcast:              Dashboard panels:
 
 ### Core Components
 
-| Component | Tool | Model / Version | Why This Over Alternatives |
+| Component | Tool | Model / Config | Why |
 |---|---|---|---|
-| Speech to Text | Deepgram | nova-2 | Real-time streaming WebSocket API. Whisper is too slow for live conversation — tested and rejected. |
-| LLM Inference | Groq | llama-3.1-8b-instant | 3-5x faster than OpenAI for equivalent quality. Critical for sub-2s total latency. Temperature 0.0 for factual consistency. |
-| Text to Speech | ElevenLabs | eleven_turbo_v2 | Most natural voice at lowest latency. turbo v2 specifically optimized for real-time streaming. Voice: George (ID: JBFqnCBsd6RMkjVDRZzb). |
-| Phone Integration | Twilio | Latest | Industry standard for programmatic phone calls. Real phone number, production-grade call handling. |
-| Public Tunnel | ngrok | v3 | Exposes local FastAPI server to Twilio during development. |
-| Web Server | FastAPI + uvicorn | Latest | Async-first framework. Native WebSocket support essential for Twilio audio streaming. |
-| Audio Capture | sounddevice | 0.5.5 | Low-level mic access with callback pattern. Runs in separate OS thread — requires queue bridge to async code. |
-| Concurrency | asyncio | Python stdlib | Single-threaded event loop handles mic, ASR, LLM, TTS simultaneously without threading complexity. |
-| Dashboard | Vanilla HTML/CSS/JS | — | No framework overhead. Native WebSocket API. Loads instantly with no build step. |
-| Dashboard Transport | websockets | Latest | Lightweight async WebSocket server for broadcasting pipeline events to dashboard. |
+| Speech to Text | Deepgram | nova-2, linear16, 16kHz | Real-time streaming WebSocket. Whisper too slow. |
+| LLM Inference | Groq | llama-3.1-8b-instant, temp=0.0, max_tokens=150 | 3-5x faster than OpenAI. Critical for sub-2s latency. |
+| Text to Speech | ElevenLabs | eleven_turbo_v2, George voice | Most natural voice at lowest latency. |
+| Embeddings | VoyageAI | voyage-4 | High quality embeddings, 200M free tokens. |
+| Reranking | VoyageAI | rerank-2 | Cross-encoder reranker dramatically improves retrieval precision. |
+| Vector Database | ChromaDB | Persistent, cosine similarity | Local vector store, no infrastructure needed. |
+| Phone Integration | Twilio | mulaw, 8000Hz | Real phone number, production-grade call handling. |
+| Public Tunnel | ngrok | v3 | Exposes local server to Twilio. |
+| Web Server | FastAPI + uvicorn | — | Async-first, native WebSocket support. |
+| Audio Capture | sounddevice | 16kHz, mono, int16 | Low-level mic access with callback pattern. |
+| Concurrency | asyncio | — | Single event loop handles all components simultaneously. |
+| Dashboard | Vanilla HTML/CSS/JS | — | No framework, WebSocket native, instant load. |
+| Dashboard Transport | websockets | port 8765 | Lightweight async WebSocket server. |
 
-### Audio Format Details
+### Audio Formats
 
-| Pipeline | Format | Sample Rate | Encoding | Why |
-|---|---|---|---|---|
-| Local (mic) | LINEAR16 | 16000 Hz | Raw PCM | Standard for speech recognition. Low overhead. |
-| Local (speaker) | MP3 | 44100 Hz | 128kbps | High quality for local playback. |
-| Phone (Twilio in) | mulaw | 8000 Hz | G.711 | Twilio's native phone audio format. |
-| Phone (Twilio out) | ulaw_8000 | 8000 Hz | G.711 | ElevenLabs format that matches Twilio's expectation. |
-
-### Model Configuration
-
-**Deepgram:**
-```
-model: nova-2
-language: en-US
-encoding: linear16
-channels: 1
-sample_rate: 16000
-interim_results: true
-endpointing: 1000ms
-```
-
-**Groq:**
-```
-model: llama-3.1-8b-instant
-max_tokens: 150
-temperature: 0.0
-```
-Temperature 0.0 means zero creativity — the model sticks strictly to facts in the property data. Any higher and it starts hallucinating property details.
-
-**ElevenLabs:**
-```
-voice_id: JBFqnCBsd6RMkjVDRZzb  (George - clear, professional)
-model_id: eleven_turbo_v2
-output_format (local): mp3_44100_128
-output_format (phone): ulaw_8000
-```
+| Pipeline | Format | Sample Rate | Why |
+|---|---|---|---|
+| Local mic input | LINEAR16 | 16000 Hz | Standard for speech recognition |
+| Local speaker output | MP3 | 44100 Hz | High quality local playback |
+| Phone input (Twilio) | mulaw | 8000 Hz | Twilio's native phone format |
+| Phone output (Twilio) | ulaw_8000 | 8000 Hz | ElevenLabs format matching Twilio |
 
 ---
 
@@ -167,45 +149,43 @@ output_format (phone): ulaw_8000
 ```
 real-estate-voice-assistant/
 │
-├── src/                        # All application code
-│   ├── __init__.py             # Makes src a Python package
+├── src/
+│   ├── __init__.py
 │   ├── asr.py                  # Ears — mic streaming → Deepgram → transcript
-│   │                           # Also handles: reconnect logic, speaking flag, queue
-│   ├── llm.py                  # Brain — transcript → Groq → response
-│   │                           # Also handles: timeout, retry, fallback, property data injection
-│   ├── tts.py                  # Mouth — response → ElevenLabs → audio
-│   │                           # Also handles: timeout, retry, fallback, executor threading
-│   ├── pipeline.py             # Local orchestrator — wires ASR + LLM + TTS
-│   │                           # Also handles: latency reporting, dashboard broadcasting
-│   ├── server.py               # Phone orchestrator — Twilio WebSocket handler
-│   │                           # Also handles: mulaw audio format, stream SID management
-│   └── broadcaster.py          # Dashboard WebSocket server on port 8765
-│                               # Manages connected clients, broadcasts pipeline events
+│   ├── llm.py                  # Brain — RAG search → Groq → response
+│   ├── tts.py                  # Mouth — ElevenLabs → audio
+│   ├── memory.py               # Hybrid memory — window + summary
+│   ├── pipeline.py             # Local orchestrator
+│   ├── server.py               # Phone orchestrator (Twilio)
+│   ├── broadcaster.py          # Dashboard WebSocket server
+│   ├── embed_properties.py     # One-time embedding script
+│   └── evaluator.py            # Evaluation framework
 │
 ├── static/
 │   └── dashboard.html          # Live operations dashboard
-│                               # Self-contained HTML/CSS/JS, no build step required
 │
 ├── config/
-│   └── prompts.yaml            # System prompts versioned separately from code
-│                               # Versioned in git so prompt changes are tracked
+│   └── prompts.yaml            # System prompts (versioned)
 │
 ├── data/
-│   └── properties.json         # 10 synthetic properties for demo purposes
-│                               # NOT real data. See Known Limitations.
+│   ├── properties.json         # 36 synthetic Calgary properties
+│   ├── eval_questions.json     # 30 hand-crafted eval questions
+│   └── eval_results.json       # Latest eval run results
 │
 ├── tests/
-│   ├── test_asr.py             # Isolated ASR test — mic → Deepgram → print transcript
-│   ├── test_llm.py             # Isolated LLM test — hardcoded text → Groq → print response
-│   └── test_tts.py             # Isolated TTS test — hardcoded text → ElevenLabs → play audio
+│   ├── test_asr.py             # Isolated ASR test
+│   ├── test_llm.py             # Isolated LLM + RAG test
+│   ├── test_tts.py             # Isolated TTS test
+│   ├── test_memory.py          # Conversation memory test
+│   └── run_eval.py             # Full evaluation runner
 │
 ├── docs/
-│   └── architecture.md         # Extended design decisions and known tradeoffs
+│   └── architecture.md
 │
-├── .env                        # API keys — never committed to git
-├── .gitignore                  # Includes .env, venv/, __pycache__/
-├── requirements.txt            # All Python dependencies with versions
-└── README.md                   # This file
+├── .env
+├── .gitignore
+├── requirements.txt
+└── README.md
 ```
 
 ---
@@ -214,43 +194,14 @@ real-estate-voice-assistant/
 
 ### Prerequisites
 
-- **Python 3.13+** — check with `python3 --version`
-- **Homebrew** (Mac) — install from brew.sh
-- **ffmpeg** — required by ElevenLabs for audio playback
-
-```bash
-brew install ffmpeg
-```
-
-Why ffmpeg? ElevenLabs `play()` function uses ffmpeg under the hood to decode and play MP3 audio. Without it you get a silent error or crash.
-
-- **ngrok** — only needed for phone pipeline
-
-```bash
-brew install ngrok
-```
-
-### Important: Virtual Environment and Anaconda
-
-If you have Anaconda installed, it overrides your virtual environment's Python. Always use the full path to the venv Python:
-
-```bash
-# Instead of:
-python -m src.pipeline        # Uses Anaconda Python — WRONG
-
-# Always use:
-venv/bin/python -m src.pipeline   # Uses venv Python — CORRECT
-```
-
-Verify you are using the right Python:
-```bash
-venv/bin/python -c "import deepgram; print('OK')"
-```
+- Python 3.13+
+- ffmpeg: `brew install ffmpeg` (required by ElevenLabs for audio playback)
+- ngrok: `brew install ngrok` (only for phone pipeline)
 
 ### Step 1 — Clone and create virtual environment
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/aakash1998/real-estate-voice-assistant
 cd real-estate-voice-assistant
 
 python3 -m venv venv
@@ -263,148 +214,76 @@ source venv/bin/activate
 venv/bin/pip install -r requirements.txt
 ```
 
-### Step 3 — Create .env file
+### Step 3 — Environment variables
 
 ```bash
 touch .env
 ```
 
-Add the following:
-
 ```
-DEEPGRAM_API_KEY=your_deepgram_key
-GROQ_API_KEY=your_groq_key
-ELEVENLABS_API_KEY=your_elevenlabs_key
-TWILIO_ACCOUNT_SID=your_twilio_sid
-TWILIO_AUTH_TOKEN=your_twilio_auth_token
-TWILIO_PHONE_NUMBER=your_twilio_number
+DEEPGRAM_API_KEY=your_key
+GROQ_API_KEY=your_key
+ELEVENLABS_API_KEY=your_key
+VOYAGE_API_KEY=your_key
+TWILIO_ACCOUNT_SID=your_sid
+TWILIO_AUTH_TOKEN=your_token
+TWILIO_PHONE_NUMBER=your_number
 ```
 
-Where to get API keys:
-- Deepgram: console.deepgram.com — $200 free credits on signup
-- Groq: console.groq.com — generous free tier
-- ElevenLabs: elevenlabs.io — 10,000 characters/month free
-- Twilio: twilio.com — $15 trial credits on signup
+Where to get keys:
+- Deepgram: console.deepgram.com — $200 free credits
+- Groq: console.groq.com — free tier
+- ElevenLabs: elevenlabs.io — 10,000 chars/month free
+- VoyageAI: voyageai.com — 200M free tokens
+- Twilio: twilio.com — $15 trial credits
 
-Verify your keys are loading correctly:
+### Step 4 — Embed properties (one time setup)
+
 ```bash
-venv/bin/python -c "from dotenv import load_dotenv; import os; load_dotenv(); print(os.getenv('DEEPGRAM_API_KEY'))"
+venv/bin/python -m src.embed_properties
 ```
 
-### Step 4 — Run the local pipeline
+This reads `data/properties.json`, generates embeddings using VoyageAI, and stores them in ChromaDB. Only needs to run again when property data changes.
+
+### Step 5 — Run local pipeline
 
 ```bash
 venv/bin/python -m src.pipeline
 ```
 
-### Step 5 — Open the dashboard
+### Step 6 — Open dashboard
 
 ```bash
 open static/dashboard.html
 ```
 
-The dashboard auto-connects to the pipeline broadcaster on `ws://localhost:8765`. If the pipeline is not running, the dashboard shows a "Connection lost. Retrying..." screen and reconnects automatically when the pipeline starts.
+Dashboard auto-connects to pipeline on `ws://localhost:8765`.
 
-### Step 6 — Run the phone pipeline (optional)
+### Step 7 — Phone pipeline (optional)
 
-Terminal 1 — start ngrok tunnel:
+Terminal 1:
 ```bash
 ngrok http 8000
 ```
 
-Copy the forwarding URL (e.g. `https://abc123.ngrok-free.dev`)
-
-Terminal 2 — start FastAPI server:
+Terminal 2:
 ```bash
 venv/bin/python -m uvicorn src.server:app --port 8000 --reload
 ```
 
-In Twilio console → Phone Numbers → your number → Configure → set webhook:
-```
-https://abc123.ngrok-free.dev/incoming-call
-```
+Set Twilio webhook to: `https://your-ngrok-url.ngrok-free.dev/incoming-call`
 
-Method: HTTP POST. Save. Call your Twilio number.
+### Important: Anaconda conflict
 
----
-
-## 🧪 Running Tests
-
-Each module has an isolated test. Run these to verify individual components work before running the full pipeline.
-
-### Test ASR (Deepgram)
+If you have Anaconda installed, always use the full venv path:
 ```bash
-venv/bin/python -m tests.test_asr
-```
-What it does: Opens mic, streams to Deepgram, prints transcript to terminal.
-Pass criteria: Speak a sentence — see it printed accurately within 1-2 seconds.
-
-### Test LLM (Groq)
-```bash
-venv/bin/python -m tests.test_llm
-```
-What it does: Sends a hardcoded real estate question to Groq, prints response.
-Pass criteria: Receives a relevant, accurate response about the properties in the data.
-
-### Test TTS (ElevenLabs)
-```bash
-venv/bin/python -m tests.test_tts
-```
-What it does: Sends hardcoded text to ElevenLabs, plays audio through speaker.
-Pass criteria: You hear the text spoken out loud in a natural voice.
-
-Run all three in sequence before your first full pipeline test. If any test fails, fix that module before proceeding.
-
----
-
-## 🖥️ Dashboard Guide
-
-The live operations dashboard (`static/dashboard.html`) connects to the pipeline via WebSocket on port 8765 and updates in real time as conversations happen.
-
-### Panel Breakdown
-
-**Live Transcript (left panel)**
-Shows the full conversation history. User messages appear in cyan, agent responses in amber. Each message shows the speaker role, timestamp, and ASR latency for user messages.
-
-**Latency Monitor (right panel)**
-Shows per-component latency bars and values for the most recent exchange. Colors indicate performance:
-- Green: excellent performance
-- Amber: acceptable performance
-- Red: slow, needs attention
-
-**Component Status (right panel)**
-Shows real-time state of each component:
-- LISTENING — Deepgram is receiving audio
-- RECEIVING — Deepgram is processing speech
-- PROCESSING — Groq is generating response
-- GENERATING — ElevenLabs is creating audio
-- SPEAKING — Audio is playing
-- IDLE — Component is waiting
-
-**Session Analytics (bottom panel)**
-Running statistics for the current session: total exchanges, average LLM latency, average TTS latency, average total response time.
-
-**Voice Waveform (bottom panel)**
-Animated waveform that activates when the agent is speaking.
-
-### Dashboard Troubleshooting
-
-If the dashboard shows "Connection lost. Retrying..." it means the pipeline is not running. Start the pipeline first, then the dashboard will auto-connect.
-
-If the dashboard connects but shows no data, check that port 8765 is free:
-```bash
-lsof -ti:8765 | xargs kill -9
+venv/bin/python -m src.pipeline   # correct
+python -m src.pipeline            # wrong — uses Anaconda
 ```
 
-Then restart the pipeline.
+### Port conflict fix
 
-### Common Port Conflict Fix
-
-If you see `OSError: [Errno 48] address already in use` when starting the pipeline, a previous session was suspended with Ctrl+Z instead of stopped with Ctrl+C.
-
-Always use Ctrl+C to stop the pipeline — never Ctrl+Z.
-
-To fix a stuck port:
+Always use Ctrl+C to stop — never Ctrl+Z. If you see port already in use:
 ```bash
 lsof -ti:8765 | xargs kill -9
 lsof -ti:8000 | xargs kill -9
@@ -412,389 +291,318 @@ lsof -ti:8000 | xargs kill -9
 
 ---
 
-## 🔬 How It Works — Deep Dive
+## 🧪 Running Tests
 
-### 1. Audio Streaming and The Queue Problem
+```bash
+# Test each module in isolation
+venv/bin/python -m tests.test_asr
+venv/bin/python -m tests.test_llm
+venv/bin/python -m tests.test_tts
 
-The mic callback (sounddevice) runs in a separate OS thread. Directly calling async functions from that thread raises:
+# Test conversation memory
+venv/bin/python -m tests.test_memory
 
+# Run full evaluation
+venv/bin/python -m tests.run_eval
 ```
-RuntimeError: There is no current event loop in thread 'Dummy-1'
-```
-
-The fix is a thread-safe asyncio queue:
-
-```
-Mic Thread (OS thread)              Async Event Loop (main thread)
-        │                                       │
-        │  audio chunk arrives                  │
-        ├──── loop.call_soon_threadsafe ───────▶│
-        │     (audio_queue.put_nowait)           │
-        │                                       │  await audio_queue.get()
-        │                                       ├────────────────────────▶ Deepgram.send()
-```
-
-This completely decouples the mic thread from async code. No race conditions, no blocking, no thread locks needed.
-
-### 2. Preventing Mic Feedback Loop
-
-When the assistant speaks, the mic picks up the speaker output and Deepgram transcribes it as a new question — creating an infinite response loop.
-
-Naive fix (does not work reliably): ignore transcripts while `is_speaking == True`. The problem is the last few words of a TTS response finish playing just after `is_speaking` becomes False — those words slip through as a new question.
-
-Real fix: stop sending audio chunks to Deepgram entirely while speaking:
-
-```
-Audio chunk arrives from mic
-    │
-    ├── _is_speaking == True?  ──▶ Drop chunk silently. Deepgram never sees it.
-    └── _is_speaking == False? ──▶ Send chunk to Deepgram normally.
-```
-
-When TTS finishes: `_is_speaking = False`, audio resumes flowing to Deepgram.
-
-### 3. Blocking vs Non-Blocking TTS
-
-ElevenLabs `play()` is a blocking synchronous call. Calling it directly in async code freezes the entire event loop for the duration of audio playback. While frozen:
-- Deepgram receives no audio → connection times out
-- No new messages can be processed
-- Dashboard updates stop
-
-Fix: run `play()` in a thread executor:
-
-```python
-loop = asyncio.get_event_loop()
-await loop.run_in_executor(None, play, io.BytesIO(audio_bytes))
-```
-
-`run_in_executor` runs the blocking call in a background thread while the event loop stays free. Audio plays while everything else continues normally.
-
-### 4. Latency Measurement Methodology
-
-Each component is timed independently using `time.time()`:
-
-```
-User stops speaking
-        │ t_asr_start = time.time()
-        ▼
-Deepgram sends is_final=True transcript
-        │ asr_latency = (time.time() - t_asr_start) * 1000
-        │ t_llm_start = time.time()
-        ▼
-Groq returns response text
-        │ llm_latency = (time.time() - t_llm_start) * 1000
-        │ t_tts_start = time.time()
-        ▼
-ElevenLabs returns complete audio bytes
-        │ tts_latency = (time.time() - t_tts_start) * 1000
-        ▼
-Audio begins playing (NOT measured)
-
-TOTAL = llm_latency + tts_latency
-```
-
-ASR latency is measured separately and reported but not included in TOTAL — it represents how long the user was speaking, not a processing bottleneck.
-
-Audio playback time is explicitly excluded from all measurements. It is not a bottleneck we can control and including it inflates the metric misleadingly.
-
-### 5. Deepgram Reconnect Detection
-
-The Deepgram SDK v3 swallows connection errors internally and does not raise them to application code. Detecting disconnection requires listening to WebSocket lifecycle events:
-
-```python
-connection.on(LiveTranscriptionEvents.Open, on_open)    # Sets connected flag
-connection.on(LiveTranscriptionEvents.Error, on_error)  # Sets failed flag
-connection.on(LiveTranscriptionEvents.Close, on_close)  # Sets failed flag
-```
-
-After calling `connection.start()`, we wait up to 3 seconds for either the `connected` or `failed` event using `asyncio.wait()`. If `failed` fires or timeout occurs, we increment the reconnect counter and try again.
 
 ---
 
-## 📊 Latency Metrics Explained
+## 🔍 RAG Pipeline — How It Works
+
+### Why RAG Over Injecting All Properties
+
+Before RAG, every question sent all 36 properties to Groq:
+```
+Question → inject all 36 properties (thousands of tokens) → Groq
+```
+
+With RAG:
+```
+Question → find top 3 relevant properties → Groq
+```
+
+Result: 10x fewer tokens per request, faster responses, more accurate answers, scales to any number of properties.
+
+### Two-Step Retrieval
+
+**Step 1 — Vector search (broad net)**
+ChromaDB converts the question to a vector and finds the 10 most semantically similar property documents. Fast and cheap.
+
+**Step 2 — Reranking (precision)**
+VoyageAI rerank-2 re-scores all 10 candidates against the original query using a cross-encoder model. Returns top 3. Significantly more accurate than vector search alone.
+
+### Incremental Indexing
+
+When you update `properties.json` and re-run `embed_properties.py`:
+- New properties get embedded and added
+- Changed properties get re-embedded (detected via content hash)
+- Unchanged properties get skipped
+
+```bash
+[ADD]    Riverside Lofts — new property, embedding
+[SKIP]   Belmont House — no changes detected
+[UPDATE] Forest Hills — content changed, re-embedding
+```
+
+---
+
+## 🧠 Conversation Memory — How It Works
+
+### Hybrid Memory (Window + Summary)
+
+Each conversation uses a two-layer memory system:
+
+**Layer 1 — Window (last 4 messages in full)**
+The most recent exchanges are kept verbatim. This preserves exact detail for the current discussion.
+
+**Layer 2 — Summary (older context compressed)**
+When messages exceed the threshold, older exchanges get summarized by Groq into a concise paragraph capturing key facts: budget, pet requirements, preferred area, properties discussed.
+
+```
+Turn 1-8: accumulate in window
+Turn 9 arrives → Turns 1-4 get summarized
+               → Turns 5-8 stay in full
+               → Turn 9 added to window
+
+Sent to Groq:
+[Summary: "User wants pet friendly 1 bed under $1,500 near Kensington"]
+[Turns 5-8 in full]
+[Turn 9 question]
+```
+
+### Why Not Just Window Memory?
+
+Pure window memory drops old context entirely. If the user stated their budget in turn 1 and you're on turn 15, the budget is gone.
+
+The summary preserves it in compressed form — keeping the user profile alive throughout the entire conversation.
+
+---
+
+## 📊 Latency Metrics
 
 ### What Each Metric Means
 
-| Metric | What It Measures | Typical Range | Primary Drivers |
-|---|---|---|---|
-| ASR (Deepgram) | How long the user was speaking | 1000-4000ms | Speech length, endpointing setting |
-| LLM (Groq) | Time from transcript sent to response received | 400-800ms | Model load, response length, token count |
-| TTS (ElevenLabs) | Time from text sent to audio bytes returned | 500-2000ms | Response text length (linear relationship) |
-| TOTAL | LLM + TTS combined | 900-2500ms | What the user actually perceives as delay |
+| Metric | What It Measures | Typical Range |
+|---|---|---|
+| ASR (Deepgram) | How long you were speaking | 1000-4000ms |
+| LLM (Groq) | Time from transcript to response | 400-800ms |
+| TTS (ElevenLabs) | Time to generate audio bytes | 500-900ms |
+| TOTAL | LLM + TTS combined | 900-1700ms |
 
-### Performance Benchmarks Observed
+### Performance Benchmarks
 
 ```
-TOTAL < 1000ms ── Excellent. Sub-second feels completely instant.
-TOTAL < 1500ms ── Good. Natural conversation speed. Most exchanges.
-TOTAL < 2500ms ── Acceptable. Slight delay noticeable but tolerable.
-TOTAL > 2500ms ── Poor. Conversation feels broken. Investigate immediately.
+TOTAL < 1000ms ── Excellent
+TOTAL < 1500ms ── Good — natural conversation speed
+TOTAL < 2500ms ── Acceptable
+TOTAL > 2500ms ── Poor
 ```
 
-### Key Insight: TTS Latency Scales With Response Length
+### Key Insight
 
-This was the single most impactful optimization discovered during development. A response of 3 sentences takes approximately 3x longer to generate audio for than a 1 sentence response. The system prompt enforces a strict maximum of 2 sentences per response specifically for this reason.
-
-Effect: TTS latency reduced from average 1800ms to average 700ms after enforcing response length limits. A 60% improvement with zero infrastructure changes.
-
-### How to Read the Dashboard Latency Bars
-
-Each bar represents the component's latency as a proportion of 3000ms (the maximum expected value). A bar at 50% width means 1500ms. Colors indicate:
-
-- Green fill: under threshold (LLM < 500ms, TTS < 600ms, Total < 1000ms)
-- Amber fill: within acceptable range
-- Red fill: above threshold, investigate
+TTS latency scales linearly with response length. Constraining the LLM to 2 sentences reduced average TTS from ~1800ms to ~900ms — a 50% improvement with no infrastructure changes.
 
 ---
 
 ## 🛡️ Resilience
 
-### Groq (LLM) Resilience
+### Groq (LLM)
 
-| Scenario | Detection | Response |
-|---|---|---|
-| Response takes > 5 seconds | `asyncio.wait_for(timeout=5.0)` | TimeoutError raised |
-| Timeout on attempt 1 | Exception caught | Retry attempt 2 automatically |
-| Timeout on attempt 2 | Exception caught | Speak fallback message to user |
-| Any other exception | Exception caught | Same retry and fallback flow |
-| System after failure | Automatic | Ready for next question immediately |
+| Scenario | Response |
+|---|---|
+| Response > 10 seconds | Timeout triggered |
+| Timeout on attempt 1 | Automatic retry |
+| Both attempts fail | Graceful fallback message spoken |
 
-Fallback message: "I'm having a technical issue right now. Please try again in a moment."
+### ElevenLabs (TTS)
 
-### ElevenLabs (TTS) Resilience
+| Scenario | Response |
+|---|---|
+| Generation > 10 seconds | Timeout triggered |
+| Both attempts fail | Fallback message attempted |
 
-| Scenario | Detection | Response |
-|---|---|---|
-| Audio generation takes > 10 seconds | `asyncio.wait_for(timeout=10.0)` | TimeoutError raised |
-| Timeout on attempt 1 | Exception caught | Retry attempt 2 automatically |
-| Both attempts fail | `audio_bytes is None` check | Attempt fallback message generation |
-| Fallback also fails | Exception caught | Return empty audio, system continues |
+### Deepgram (ASR)
 
-Known limitation: The fallback message itself calls ElevenLabs without a timeout. If ElevenLabs is completely down, the fallback will also fail. Production fix: pre-recorded fallback audio file stored locally.
+| Scenario | Response |
+|---|---|
+| Connection rejected | Failure detected via event listener |
+| Connection dropped | Auto reconnect triggered |
+| Max reconnects (3) reached | Graceful shutdown |
 
-### Deepgram (ASR) Resilience
+---
 
-| Scenario | Detection | Response |
-|---|---|---|
-| HTTP 401 (bad API key) | `failed` event fires | Reconnect attempt triggered |
-| Connection rejected | `failed` event or 3s timeout | Reconnect attempt triggered |
-| Connection dropped mid-call | Send fails with exception | Reconnect attempt triggered |
-| Reconnect attempt 1-3 | Counter incremented | 2 second backoff between attempts |
-| Max reconnects reached (3) | Counter > max | Graceful shutdown with clear message |
-| Successful reconnect | `connected` event fires | Counter reset to 0, continue normally |
+## 📈 Evaluation Framework
+
+### Overview
+
+30 hand-crafted questions across 11 categories measured across three layers:
+
+**Layer 1 — Retrieval Metrics (Precision@K + MRR)**
+Industry standard information retrieval metrics. Measures whether ChromaDB + reranker returns the right property and how high it ranks.
+
+**Layer 2 — LLM-as-Judge**
+A second LLM scores each answer on faithfulness (no hallucinations), relevance (answers the question), and completeness (includes key details).
+
+**Layer 3 — Regression Gate**
+Hard threshold at 80%. Flags failing questions automatically when score drops.
+
+### Latest Results
+
+```
+EVALUATION REPORT — April 14, 2026
+════════════════════════════════════════════
+Total questions:       30
+
+RETRIEVAL METRICS
+  Precision@1:         86.7%
+  Precision@3:         90.0%
+  MRR:                 0.890
+
+QUALITY METRICS (LLM-as-Judge)
+  Faithfulness:        80.8%
+  Relevance:           96.7%
+  Completeness:        55.0%
+
+OVERALL SCORE:         83.0% ✅ PASSED
+
+BY CATEGORY:
+  specific_property    100.0%
+  pet                   93.8%
+  neighborhood          93.4%
+  utilities             83.3%
+  budget                83.4%
+  luxury                83.4%
+  amenity               88.3%
+  parking               87.5%
+  unit_type             69.1%
+  fallback              66.7%
+  availability          41.7%
+════════════════════════════════════════════
+```
+
+### Known Weaknesses and Root Causes
+
+**Availability (41.7%)** — "available now" appears once per document. Not enough semantic signal for the embedding to strongly connect availability queries to the right properties. Fix: expand availability description in property text before re-embedding.
+
+**Unit type (69.1%)** — "bachelor" and "3 bedroom" are buried in a list. Fix: make unit types more prominent in document structure.
+
+**Completeness (55%)** — The judge penalizes short answers. But this is a voice assistant — short answers are intentional. Nobody wants a full property spec read to them over the phone. This is a known mismatch between judge behavior and voice application requirements.
+
+### Running Evaluation
+
+```bash
+venv/bin/python -m tests.run_eval
+```
 
 ---
 
 ## ⭐ Honest Project Rating
 
-### Current Rating: 6.5 / 10
+### Current Rating: 8.5 / 10
 
-This is an honest assessment without inflation.
+### What Earns the 8.5
 
-### What Earns the 6.5
-
-- **Real threading patterns** — Queue between mic thread and async is a genuine production pattern, not a tutorial shortcut
-- **Per-component latency instrumentation** — Most projects measure nothing. This measures everything separately and displays it live
-- **Three-layer resilience** — Timeout, retry, and fallback on every component. Nothing crashes silently
-- **Mic feedback prevention** — Diagnosing and solving the self-listening loop required real debugging, not following instructions
-- **Isolated module testing** — Every module tested independently before wiring. Proper engineering discipline
-- **Live operations dashboard** — Real-time WebSocket dashboard with latency bars, component status, waveform, and session analytics
-- **Conversational prompt engineering** — Agent asks qualifying questions, suggests max 2 properties, flows like a real leasing agent
-- **Temperature 0.0 enforcement** — Zero creativity prevents hallucination on factual property data
+- Real threading patterns — queue between mic thread and async code
+- Per-component latency instrumentation with live dashboard
+- Three-layer resilience on every component
+- RAG pipeline with vector search + reranking
+- Hybrid conversation memory with automatic summarization
+- Production-grade evaluation framework with Precision@K, MRR, and LLM-as-Judge
+- Regression gate preventing quality degradation
+- Mic feedback loop prevention
+- Isolated module testing before wiring
 
 ### What Prevents a Higher Score
 
-- **No RAG pipeline** — Property data is a hardcoded JSON file. A real system uses a vector database with semantic search and citation enforcement
-- **No conversation memory** — Every question is treated independently. No multi-turn context within the same call
-- **No evaluation framework** — No automated script to test questions and measure answer quality, faithfulness, or hallucination rate
-- **Incomplete phone pipeline** — Twilio integration works but lacks the same resilience as the local pipeline
-- **No concurrent sessions** — One conversation at a time. Production handles multiple simultaneous callers
-- **Static property data** — No real-time availability updates, no pricing sync, no database backend
-- **Pre-recorded fallback missing** — TTS fallback depends on ElevenLabs being available
+- No concurrent sessions — one conversation at a time
+- Static property data — JSON file, not a real database
+- TTS fallback depends on ElevenLabs being available
+- No streaming TTS — full audio generated before playback starts
+- Phone pipeline resilience incomplete
 
 ---
 
 ## 🗺️ Roadmap to 10 / 10
 
-### Priority 1 — RAG Pipeline (+1.0 → 7.5)
+**Concurrent sessions (+0.5)**
+Session manager with UUID per caller. Isolated state per session.
 
-Replace properties.json with a proper vector database.
+**Streaming TTS (+0.5)**
+Stream audio chunks as they arrive instead of waiting for full generation. Reduces perceived latency by 40-60%.
 
-```
-What to build:
-· Embed all property data using text-embedding-3-small
-· Store embeddings in ChromaDB or Pinecone
-· Replace JSON lookup in llm.py with semantic search
-· Add citation enforcement (only answer from retrieved chunks)
-· Add faithfulness score to latency report
+**Production hardening (+0.5)**
+Structured JSON logging, Prometheus metrics, health check endpoint, Docker containerization, pre-recorded fallback audio.
 
-Tools: LangChain, ChromaDB, OpenAI Embeddings
-Estimated complexity: 3-5 days
-Impact: Eliminates hallucination risk, enables real-time data updates
-```
-
-### Priority 2 — Conversation Memory (+0.5 → 8.0)
-
-Maintain conversation history per session.
-
-```
-What to build:
-· Session ID generated per call
-· Rolling message history (last 10 exchanges stored in memory)
-· Full history passed to Groq on every request
-· Session cleared when call ends or times out
-
-Tools: Python dict, Redis for production scale
-Estimated complexity: 1 day
-Impact: Agent remembers context within a call ("you mentioned a 2 bedroom earlier")
-```
-
-### Priority 3 — Evaluation Framework (+0.5 → 8.5)
-
-Automated quality testing on every change.
-
-```
-What to build:
-· Golden dataset: 50 test questions with verified expected answers
-· Offline eval script measuring faithfulness, accuracy, hallucination rate
-· CI integration: eval runs automatically on every git commit
-· Quality gate: build fails if score drops below 80%
-· Latency regression gate: build fails if average total > 2000ms
-
-Tools: RAGAS, pytest, GitHub Actions
-Estimated complexity: 2-3 days
-Impact: Prevents regressions, proves quality with data not intuition
-```
-
-### Priority 4 — Concurrent Sessions (+0.5 → 9.0)
-
-Handle multiple simultaneous callers.
-
-```
-What to build:
-· Session manager class with UUID per caller
-· Isolated state per session (is_speaking, conversation history, latency history)
-· Thread-safe session storage
-· Session timeout and cleanup for abandoned calls (> 5 minutes idle)
-· Per-session dashboard metrics
-
-Tools: asyncio, UUID, Redis for distributed storage
-Estimated complexity: 3-5 days
-Impact: Makes the system actually usable in production
-```
-
-### Priority 5 — Production Hardening (+0.5 → 9.5)
-
-```
-What to build:
-· Structured JSON logging with trace IDs per request
-· Prometheus metrics endpoint (/metrics)
-· Health check endpoint (/health)
-· Docker containerization with docker-compose
-· Pre-recorded fallback audio file for complete TTS failure
-· Environment-based configuration (dev/staging/prod)
-
-Tools: structlog, Prometheus, Docker
-Estimated complexity: 2-3 days
-Impact: Observable, deployable, genuinely production-ready
-```
-
-### Priority 6 — Real Data Backend (+0.5 → 10.0)
-
-```
-What to build:
-· PostgreSQL or Supabase backend for property data
-· Real-time availability sync from property management system
-· Admin panel for property managers
-· Booking confirmation flow with email notifications
-· Webhook integration for CRM updates
-
-Tools: Supabase, FastAPI, SQLAlchemy, SendGrid
-Estimated complexity: 1-2 weeks
-Impact: Commercially deployable product
-```
+**Real data backend (+0.5)**
+PostgreSQL or Supabase backend. Real-time availability sync. Admin panel.
 
 ---
 
 ## 🧩 Key Engineering Decisions
 
-### Why separate STT + LLM + TTS instead of an all-in-one tool?
+**Why separate STT + LLM + TTS instead of an all-in-one tool?**
+Per-component latency measurement, independent resilience, ability to swap any component, clearer debugging.
 
-Deepgram offers a Voice Agent product handling all three. Separate tools were chosen for five reasons: per-component latency measurement is only possible with separation; each component can fail and recover independently; any component can be swapped without touching others; debugging is significantly clearer when something fails; and the engineering decisions made along the way demonstrate deeper understanding than calling a single managed API.
+**Why Groq instead of OpenAI?**
+400-700ms vs 1200ms+ for similar quality. In real-time voice every 100ms is perceptible.
 
-### Why Groq instead of OpenAI?
+**Why reranking on top of vector search?**
+Vector search finds candidates by approximate similarity. The cross-encoder reranker scores each candidate against the query as a pair — significantly more precise. Availability queries went from returning wrong properties to correct ones after adding reranking.
 
-Groq responds in 400-700ms consistently. OpenAI GPT-4o averages 1200-1500ms for equivalent outputs. In a real-time voice system, 800ms of additional latency is immediately perceptible by the caller. The tradeoff is slightly less reasoning capability — acceptable for a leasing agent answering structured questions about a known property dataset. Temperature was set to 0.0 on both to ensure fair comparison.
+**Why hybrid memory over pure window memory?**
+Window memory drops old context entirely. Hybrid summarizes old context so user preferences stated early in the call persist throughout the entire conversation.
 
-### Why endpointing=1000ms?
+**Why LLM-as-Judge over keyword matching?**
+Keyword matching checks if a word appears. LLM-as-Judge understands meaning, detects hallucinations, and gives human-readable reasoning for each score.
 
-500ms was tested first and rejected. It cut sentences mid-thought when users paused naturally — a common occurrence in conversational speech. 1500ms was tested and made the system feel unresponsive. 1000ms is the sweet spot: generous enough for natural pauses, tight enough to feel responsive.
-
-### Why block audio chunks during TTS rather than just ignoring transcripts?
-
-Ignoring transcripts while `is_speaking == True` was the first approach. It failed because Deepgram streams results slightly after speech ends — the last few words of the TTS response arrive at Deepgram in the window between TTS finishing and `is_speaking` being set to False. Those words trigger a new question. Blocking at the source (never sending audio to Deepgram while speaking) eliminates the race condition entirely.
-
-### Why prompts in YAML instead of hardcoded strings?
-
-A prompt change can affect system behavior as dramatically as a code change. A competitor's name accidentally mentioned, a constraint removed, an instruction reordered — all can break a production system. Versioning prompts in a config file means every prompt change appears in git history with a commit message, is reviewable in pull requests, and is rollback-able in seconds. This is standard practice in production AI teams at companies like Anthropic, OpenAI, and Cohere.
-
-### Why temperature=0.0 for Groq?
-
-The LLM is answering factual questions about specific properties with specific prices, addresses, and amenities. Any temperature above 0.0 introduces stochastic variation — the same question might get a slightly different answer each time, including potential hallucinations of property details that do not exist. Temperature 0.0 makes responses deterministic and factual. The tradeoff is slightly less natural conversational tone — acceptable given the application.
-
-### Why max_tokens=150?
-
-TTS latency scales linearly with response length. A 300-token response takes roughly twice as long to generate audio for as a 150-token response. 150 tokens is sufficient for 2 clear sentences — enough to answer any property question. Combined with the system prompt instruction to keep answers short, this is the primary latency optimization in the system.
+**Why temperature=0.0 for Groq?**
+The LLM answers factual questions about specific properties. Any temperature above 0.0 introduces stochastic variation — the same question might get different answers including hallucinated property details.
 
 ---
 
 ## ⚠️ Known Limitations
 
-| Limitation | Current Behavior | Production Fix |
-|---|---|---|
-| Hardcoded property data | Synthetic JSON file with 10 properties | Vector database with RAG, real property management system integration |
-| No conversation memory | Each question treated independently | Rolling session history passed to LLM on every request |
-| TTS fallback depends on ElevenLabs | If ElevenLabs is fully down, fallback message also fails | Pre-recorded MP3 fallback file stored locally |
-| Single tenant | One conversation at a time | Session manager with UUID per caller, concurrent async handlers |
-| Endpointing cuts natural pauses | 1000ms silence triggers sentence completion | Utterance-end detection combined with LLM intent classification |
-| No evaluation | No automated quality or regression testing | RAGAS eval framework with CI gate |
-| Phone pipeline resilience incomplete | server.py has no timeout handling | Apply identical resilience patterns from local pipeline |
-| ngrok URL changes on restart | Must update Twilio webhook manually every session | ngrok paid static domain, or deploy to cloud with fixed URL |
-| No structured logging | Print statements only | structlog with JSON output, trace IDs, log aggregation |
-| No health checks | No way to verify system health programmatically | /health endpoint returning component status JSON |
+| Limitation | Production Fix |
+|---|---|
+| Static property data (JSON) | Vector DB synced from PostgreSQL via CDC pipeline |
+| No concurrent sessions | Session manager with UUID per caller |
+| TTS fallback depends on ElevenLabs | Pre-recorded fallback audio stored locally |
+| Completeness judge unfair to voice | Voice-aware judge prompt or separate eval config |
+| Availability queries weak (41.7%) | Expand availability text in property documents |
+| Unit type queries weak (69.1%) | Make unit types more prominent in document structure |
+| No streaming TTS | Stream audio chunks, don't wait for full generation |
 
 ---
 
 ## 💡 What I Learned
 
-**Threading and async do not mix without a queue.** The mic callback runs in a separate OS thread. Directly calling async functions raises RuntimeError. The asyncio Queue is the correct bridge — it is used in production audio systems, game engines, and real-time data pipelines for exactly this reason. Understanding why it is necessary (not just that it is necessary) is what separates copying a solution from understanding it.
+**Threading and async don't mix without a queue.** The mic callback runs in a separate OS thread. Directly calling async functions raises RuntimeError. The queue bridges the two worlds cleanly.
 
-**Blocking calls are invisible until they break everything.** ElevenLabs `play()` looked completely harmless. It blocked the entire event loop for the duration of audio playback — preventing Deepgram from receiving audio, triggering WebSocket timeouts, and halting all dashboard updates. The lesson: in async code, any synchronous call that takes wall-clock time is a hidden landmine. Always run them in executors.
+**Blocking calls are invisible until they break everything.** ElevenLabs play() froze the entire event loop during playback — causing Deepgram timeouts. Running it in an executor fixed this.
 
-**Measuring latency naively gives wrong numbers.** The first latency timer included audio playback time, producing numbers of 8-17 seconds. Playback time is not a bottleneck we control — it is fixed by audio duration. The real metric is generation time. Separating measurement from playback was non-obvious and required clearly defining what was actually being measured and why.
+**Measuring latency naively gives wrong numbers.** Including audio playback time inflated numbers to 8-17 seconds. Only generation time counts toward the latency budget.
 
-**TTS latency is directly proportional to response length.** The most impactful optimization was not changing models, APIs, or infrastructure. It was constraining the LLM to short responses. Shorter text means less audio to generate. This single change reduced average TTS latency by 40-60%. The lesson: understand where time is actually spent before optimizing infrastructure.
+**TTS latency scales with response length.** Constraining to 2 sentences cut TTS latency by 50%. The biggest optimization wasn't infrastructure — it was prompt engineering.
 
-**Prompt engineering is system engineering.** Treating the system prompt as an afterthought produced hallucinations, off-topic responses, and inconsistent behavior. Versioning prompts in config files, iterating on them systematically with clear hypotheses, and being extremely explicit about constraints is the difference between a demo that works sometimes and a system that works reliably.
+**Bad evaluation data gives you fake low scores.** First eval run: 74.6%. After fixing wrong expected answers in the golden dataset: 83.0%. No system changes. The eval was measuring the wrong thing.
 
-**The gap between a demo and a production system is enormous.** Silence handling, mic feedback loops, partial transcripts, connection drops, thread safety, and audio format mismatches are completely invisible in tutorials. They are constant in real systems. Every one of these was encountered, diagnosed, and solved in this project — and each one required understanding the underlying system, not just the API.
+**An eval score is a smoke alarm, not a guarantee.** It tells you when something breaks and which questions failed. The goal isn't a perfect score — it's knowing exactly where the system is weak and why.
 
-**Ctrl+Z does not stop a program — it suspends it.** Ports stay occupied. Always use Ctrl+C. Discovered the hard way after getting `OSError: [Errno 48] address already in use` repeatedly.
+**Ctrl+Z does not stop a program.** It suspends it. Ports stay occupied. Always use Ctrl+C.
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome. Priority areas where help would be most valuable:
+Priority areas:
+- Streaming TTS implementation
+- Concurrent session manager
+- Expanded eval dataset (50+ questions)
+- Docker containerization
+- Availability and unit type retrieval improvements
 
-- **RAG implementation** — Replace JSON with ChromaDB or Pinecone vector store
-- **Conversation memory** — Add rolling session history per call
-- **Evaluation framework** — Build golden dataset and RAGAS eval script
-- **Concurrent sessions** — Session manager for multiple simultaneous callers
-- **Docker setup** — Containerize the full application with docker-compose
-- **Pre-recorded fallback** — Record and integrate a local fallback audio file
-
-Please open an issue before submitting a PR to discuss the approach. Include: what problem you are solving, what approach you plan to take, and any tradeoffs you see.
+Open an issue before submitting a PR.
 
 ---
 
@@ -808,10 +616,9 @@ MIT License — see LICENSE file for details.
 
 Built by Aakash Patel — Data Engineer transitioning into AI Engineering.
 
-- LinkedIn: (https://www.linkedin.com/in/aakashpatel05/)
-- Portfolio: https://aakashbuilds.dev/
-- Demo Video: [ADD LINKEDIN POST LINK HERE]
+- LinkedIn: [linkedin.com/in/aakashpatel05](https://www.linkedin.com/in/aakashpatel05/)
+- GitHub: [github.com/aakash1998](https://github.com/aakash1998)
+- Website: [[ADD WEBSITE LINK HERE](https://aakashbuilds.dev/)]
+- Demo: [linkedin.com/feed/update/urn:li:activity:7449486634061836288](https://www.linkedin.com/feed/update/urn:li:activity:7449486634061836288/)
 
 ---
-
-*This project was built as part of a deliberate effort to understand production AI engineering — not just call APIs, but understand the real systems underneath them. Every bug encountered was treated as a learning opportunity, not an obstacle.*
